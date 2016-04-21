@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Windows.Forms;
 
-using ibox.pro.sdk.external;
+using Ibox.Pro.SDK.External;
 using System.Linq;
 using System.Collections.Generic;
-using ibox.pro.sdk.external.result;
+using Ibox.Pro.SDK.External.Result;
 using System.IO;
+using Ibox.Pro.SDK.External.Context;
+using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Example
 {
@@ -22,20 +25,25 @@ namespace Example
         {
             InitializeComponent();
             initControls();
-            
+
             m_PaymentController.SelectApplicationDelegate = onRequestSelectApplication;
             m_PaymentController.ConfirmScheduleDelegate = onRequestConfirmSchedule;
             m_PaymentController.ScheduleCreationFailedDelegate = onScheduleCreationFailed;
 
             m_PaymentController.ErrorEvent += onPaymentError;
             m_PaymentController.ReaderEvent += onReaderEvent;
-            m_PaymentController.PaymentFinishedEvent += onPaymentFinished;
+            m_PaymentController.TransactionStartedEvent += onTransactionStarted;
+            m_PaymentController.TransactionFinishedEvent += onPaymentFinished;
+            m_PaymentController.ReverseEvent += onReverseEvent;
 
-            cmbComPorts.Items.Clear();
-            cmbComPorts.Items.Add(String.Empty);
-            foreach (string portName in System.IO.Ports.SerialPort.GetPortNames())
-                cmbComPorts.Items.Add(portName);
-            
+            try
+            {
+                m_PaymentController.SetReaderType(ReaderType.Wisepad, string.IsNullOrEmpty(edt_Com.Text) ? null : edt_Com.Text);
+            }
+            catch (InvalidOperationException ex)
+            {
+                log(string.Format("ERROR : {0}", ex.Message));
+            }
         }
 
         private void initControls()
@@ -70,20 +78,33 @@ namespace Example
 
         private void setCredentials()
         {
-            m_PaymentController.setCredentials(edt_Login.Text, edt_Password.Text);
+            m_PaymentController.SetCredentials(edt_Login.Text, edt_Password.Text);
         }
 
         private void log(string log)
         {
-            if (!this.Disposing && !this.IsDisposed)
-                this.Invoke((MethodInvoker)delegate
-                    {
-                        if (!edt_Log.Disposing && !edt_Log.IsDisposed)
-                            edt_Log.AppendText(log + Environment.NewLine);
-                    });
+            try
+            {
+                if (!this.Disposing && !this.IsDisposed)
+                    this.Invoke((MethodInvoker)delegate
+                        {
+                            try
+                            {
+                                if (!edt_Log.Disposing && !edt_Log.IsDisposed)
+                                    edt_Log.AppendText(log + Environment.NewLine);
+                            }
+                            catch (ObjectDisposedException e)
+                            {
 
+                            }
+                        });
+            }
+            catch (ObjectDisposedException e)
+            {
+
+            }
         }
-        
+
         private void startPayment()
         {
             setCredentials();
@@ -122,7 +143,7 @@ namespace Example
                 if (!string.IsNullOrEmpty(path))
                 {
                     if (File.Exists(path))
-                    {                        
+                    {
                         try
                         {
                             paymentProductImageData.Add(PRODUCT_FIELD_2_CODE, File.ReadAllBytes(path));
@@ -176,40 +197,68 @@ namespace Example
                         regPaymentContext.ArbitraryDays.Add(DateTime.ParseExact(day.Trim(), "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture));
                 }
             }
-                       
-            try {
-                m_PaymentController.startPayment(paymentContext);
+
+            try
+            {
+                m_PaymentController.StartPayment(paymentContext);
                 log(divider);
                 log(string.Format("STARTING NEW PAYMENT : {0}{1}", Environment.NewLine, paymentContext.ToString()));
-            } catch (InvalidOperationException e)
+            }
+            catch (InvalidOperationException e)
             {
                 log(string.Format("ERROR : {0}", e.Message));
                 return;
             }
-            
+
         }
-        
+
+        private void reversePayment()
+        {
+            setCredentials();
+
+            try
+            {
+                String trID = edt_ReverseID.Text;
+                ReverseMode mode = rb_Cancel.Checked ? ReverseMode.Cancel : ReverseMode.Return;
+                m_PaymentController.StartReverse(trID, mode);
+                log(divider);
+                log(string.Format("{0} PAYMENT : {1}{2}", mode == ReverseMode.Cancel ? "CANCEL" : "RETURN", Environment.NewLine, trID));
+            }
+            catch (InvalidOperationException e)
+            {
+                log(string.Format("ERROR : {0}", e.Message));
+                return;
+            }
+        }
+
         private void adjustPayment()
         {
             log(divider);
             log("STARTING ADJUST");
 
             setCredentials();
-            APIResult result = null;
-            if (cb_AdjustRegular.Checked)
+            
+            Task adjustTask = Task.Factory.StartNew(() =>
             {
-                result = PaymentController.Instance.adjustRegular(edt_AdjustTrId.Text, edt_AdjustEmail.Text, edt_AdjustPhone.Text);
-            }
-            else
-            {
-                result = PaymentController.Instance.adjust(edt_AdjustTrId.Text, edt_AdjustEmail.Text, edt_AdjustPhone.Text);
-            }
-
-            if (result != null && result.ErrorCode == 0)
-                log("ADJUST FINISHED OK");
-            else
-                log(string.Format("ADJUST ERROR : {0}({1})", (result == null ? "null" : result.ErrorMessage), (result == null ? "null" : result.ErrorCode.ToString())));
-            log(divider);
+                APIResult result = null;
+                if (rb_AdjustSimple.Checked)
+                {
+                    result = PaymentController.Instance.Adjust(edt_AdjustTrId.Text, edt_AdjustEmail.Text, edt_AdjustPhone.Text);
+                }
+                else if (rb_AdjustRegular.Checked)
+                {
+                    result = PaymentController.Instance.AdjustRegular(edt_AdjustTrId.Text, edt_AdjustEmail.Text, edt_AdjustPhone.Text);
+                }
+                else if (rb_AdjustReverse.Checked)
+                {
+                    result = PaymentController.Instance.AdjustReverse(edt_AdjustTrId.Text, edt_AdjustEmail.Text, edt_AdjustPhone.Text);
+                }
+                if (result != null && result.ErrorCode == 0)
+                    log("ADJUST FINISHED OK");
+                else
+                    log(string.Format("ADJUST ERROR : {0}({1})", (result == null ? "null" : result.ErrorMessage), (result == null ? "null" : result.ErrorCode.ToString())));
+                log(divider);
+            });            
         }
 
         private void getHistory()
@@ -227,20 +276,23 @@ namespace Example
             log(divider);
             log(string.Format("GET HISTORY PAGE #{0} :", page));
 
-            APIGetHistoryResult result = PaymentController.Instance.getHistory(page);
-            if (result != null && result.ErrorCode == 0)
+            Task getHistoryTask = Task.Factory.StartNew(() =>
             {
-                log(string.Format("{0,-16}  {1,-20} {2,-10} {3}", "DateTime", "Description", "Amount", "ID"));
-                if (result.Transactions != null)
-                    foreach (ibox.pro.sdk.entry.Transaction transaction in result.Transactions)
-                        log(string.Format("{0,-16:dd.MM.yyyy hh:mm}   {1,-20} {2,-10} {3}", transaction.Date, transaction.Description, string.Format(transaction.AmountFormat, transaction.Amount), transaction.ID));
-            } 
-            else
-            {
-                log(string.Format("GET HISTORY ERROR : {0}({1})", (result == null ? "null" : result.ErrorMessage), (result == null ? "null" : result.ErrorCode.ToString())));
-            }
+                APIGetHistoryResult result = PaymentController.Instance.GetHistory(page);
+                if (result != null && result.ErrorCode == 0)
+                {
+                    log(string.Format("{0,-16}  {1,-20} {2,-10} {3}", "DateTime", "Description", "Amount", "ID"));
+                    if (result.Transactions != null)
+                        foreach (Ibox.Pro.SDK.External.Entry.Transaction transaction in result.Transactions)
+                            log(string.Format("{0,-16:dd.MM.yyyy hh:mm}   {1,-20} {2,-10} {3}", transaction.Date, transaction.Description, string.Format(transaction.AmountFormat, transaction.Amount), transaction.ID));
+                }
+                else
+                {
+                    log(string.Format("GET HISTORY ERROR : {0}({1})", (result == null ? "null" : result.ErrorMessage), (result == null ? "null" : result.ErrorCode.ToString())));
+                }
 
-            log(divider);
+                log(divider);
+            });                   
         }
 
         private int onRequestSelectApplication(List<string> apps)
@@ -258,7 +310,8 @@ namespace Example
             return MessageBox.Show("Confirm schedule", "Schedule confirmation", MessageBoxButtons.YesNo) == DialogResult.Yes;
         }
 
-        private bool onScheduleCreationFailed(PaymentError error, string description = null) {
+        private bool onScheduleCreationFailed(PaymentError error, string description = null)
+        {
             log(String.Format("PAYMENT CREATION FAILED : {0}({1})", error, description ?? ""));
             return MessageBox.Show("Payment creation failed. Retry?", "Payment creation failed", MessageBoxButtons.YesNo) == DialogResult.Yes;
         }
@@ -274,30 +327,64 @@ namespace Example
             log(string.Format("ERROR : {0} ({1})", error.ToString(), errorMsg ?? ""));
         }
 
-        private void onPaymentFinished(string transactionID, string invoice, string PAN, bool requiresSignature)
+        private void onTransactionStarted(String transactionID)
         {
-            log(string.Format("PAYMENT FINISHED : {0}, {1}, {2}, {3}", transactionID, invoice, PAN, requiresSignature));
+            log(string.Format("TRANSACTION {0} STARTED", transactionID));
+        }
+
+        private void onPaymentFinished(PaymentResultContext result)
+        {
+            log(string.Format("PAYMENT FINISHED : " + Environment.NewLine
+                + " ID : {0}" + Environment.NewLine
+                + " Invoice : {1}" + Environment.NewLine
+                + " ApprovalCode : {2}" + Environment.NewLine
+                + " DateTime : {3}" + Environment.NewLine
+                + " PAN : {4}" + Environment.NewLine
+                + " Terminal : {5}" + Environment.NewLine
+                + " EMVdata : {6}" + Environment.NewLine
+                + " RequiresSignature : {7}",
+                result.TransactionItem.ID,
+                result.TransactionItem.Invoice,
+                result.TransactionItem.AcquirerApprovalCode,
+                result.TransactionItem.Date,
+                result.TransactionItem.Card != null ? result.TransactionItem.Card.PANMasked : "null",
+                result.TerminalName, result.EmvData,
+                result.RequiresSignature));
             log(divider);
         }
-#endregion
+
+        private void onReverseEvent(ReverseEvent reverseEvent, string message)
+        {
+            log(string.Format("REVERSE : {0}", message));
+        }
+
+        #endregion
 
         #region UI actions        
         private void btn_Start_Click(object sender, EventArgs e)
         {
-            m_PaymentController.setReaderType(ReaderType.Wisepad, string.IsNullOrEmpty((string)cmbComPorts.SelectedItem) ? null : cmbComPorts.SelectedItem.ToString());
+            //DEBUG
             //m_PaymentController.Logger = log;
-            m_PaymentController.enable();
+            //
+
+            m_PaymentController.Enable();
         }
 
         private void btn_Stop_Click(object sender, EventArgs e)
         {
-            m_PaymentController.disable();
+            m_PaymentController.Disable();
         }
 
         private void btn_StartPayment_Click(object sender, EventArgs e)
         {
             startPayment();
         }
+
+        private void btn_Reverse_Click(object sender, EventArgs e)
+        {
+            reversePayment();
+        }
+
 
         private void btn_ClearLog_Click(object sender, EventArgs e)
         {
@@ -404,10 +491,9 @@ namespace Example
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            m_PaymentController.disable();
+            m_PaymentController.Disable();
         }
 
         #endregion
-
     }
 }

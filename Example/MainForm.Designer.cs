@@ -66,9 +66,11 @@
             this.lbl_Repeat = new System.Windows.Forms.Label();
             this.cbl_RepeatType = new System.Windows.Forms.ComboBox();
             this.gp_Adjust = new System.Windows.Forms.GroupBox();
+            this.rb_AdjustReverse = new System.Windows.Forms.RadioButton();
+            this.rb_AdjustSimple = new System.Windows.Forms.RadioButton();
+            this.rb_AdjustRegular = new System.Windows.Forms.RadioButton();
             this.edt_AdjustTrId = new System.Windows.Forms.TextBox();
             this.lbl_AdjustTrId = new System.Windows.Forms.Label();
-            this.cb_AdjustRegular = new System.Windows.Forms.CheckBox();
             this.edt_AdjustPhone = new System.Windows.Forms.MaskedTextBox();
             this.edt_AdjustEmail = new System.Windows.Forms.TextBox();
             this.lbl_AdjustPhone = new System.Windows.Forms.Label();
@@ -90,12 +92,19 @@
             this.lbl_Field1 = new System.Windows.Forms.Label();
             this.lbl_ImageFilePath = new System.Windows.Forms.Label();
             this.edt_ImageFilePath = new System.Windows.Forms.TextBox();
+            this.edt_Com = new System.Windows.Forms.TextBox();
             this.lbl_Com = new System.Windows.Forms.Label();
-            this.cmbComPorts = new System.Windows.Forms.ComboBox();
+            this.btn_Reverse = new System.Windows.Forms.Button();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.edt_ReverseID = new System.Windows.Forms.TextBox();
+            this.rb_Cancel = new System.Windows.Forms.RadioButton();
+            this.rb_Return = new System.Windows.Forms.RadioButton();
+            this.label1 = new System.Windows.Forms.Label();
             this.gp_Regular.SuspendLayout();
             this.gp_Adjust.SuspendLayout();
             this.gp_History.SuspendLayout();
             this.gp_Product.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // btn_Enable
@@ -126,7 +135,7 @@
             this.edt_Log.Name = "edt_Log";
             this.edt_Log.ReadOnly = true;
             this.edt_Log.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.edt_Log.Size = new System.Drawing.Size(644, 541);
+            this.edt_Log.Size = new System.Drawing.Size(644, 671);
             this.edt_Log.TabIndex = 2;
             // 
             // btn_StartPayment
@@ -176,9 +185,9 @@
             // 
             // btn_ClearLog
             // 
-            this.btn_ClearLog.Location = new System.Drawing.Point(278, 523);
+            this.btn_ClearLog.Location = new System.Drawing.Point(278, 595);
             this.btn_ClearLog.Name = "btn_ClearLog";
-            this.btn_ClearLog.Size = new System.Drawing.Size(258, 30);
+            this.btn_ClearLog.Size = new System.Drawing.Size(258, 88);
             this.btn_ClearLog.TabIndex = 9;
             this.btn_ClearLog.Text = "Clear log";
             this.btn_ClearLog.UseVisualStyleBackColor = true;
@@ -471,23 +480,57 @@
             // 
             // gp_Adjust
             // 
+            this.gp_Adjust.Controls.Add(this.rb_AdjustReverse);
+            this.gp_Adjust.Controls.Add(this.rb_AdjustSimple);
+            this.gp_Adjust.Controls.Add(this.rb_AdjustRegular);
             this.gp_Adjust.Controls.Add(this.edt_AdjustTrId);
             this.gp_Adjust.Controls.Add(this.lbl_AdjustTrId);
-            this.gp_Adjust.Controls.Add(this.cb_AdjustRegular);
             this.gp_Adjust.Controls.Add(this.edt_AdjustPhone);
             this.gp_Adjust.Controls.Add(this.edt_AdjustEmail);
             this.gp_Adjust.Controls.Add(this.lbl_AdjustPhone);
             this.gp_Adjust.Controls.Add(this.lbl_AdjustEmail);
             this.gp_Adjust.Location = new System.Drawing.Point(278, 275);
             this.gp_Adjust.Name = "gp_Adjust";
-            this.gp_Adjust.Size = new System.Drawing.Size(258, 118);
+            this.gp_Adjust.Size = new System.Drawing.Size(258, 170);
             this.gp_Adjust.TabIndex = 13;
             this.gp_Adjust.TabStop = false;
             this.gp_Adjust.Text = "Adjust payment";
             // 
+            // rb_AdjustReverse
+            // 
+            this.rb_AdjustReverse.AutoSize = true;
+            this.rb_AdjustReverse.Location = new System.Drawing.Point(9, 64);
+            this.rb_AdjustReverse.Name = "rb_AdjustReverse";
+            this.rb_AdjustReverse.Size = new System.Drawing.Size(135, 17);
+            this.rb_AdjustReverse.TabIndex = 54;
+            this.rb_AdjustReverse.Text = "Adjust reverse payment";
+            this.rb_AdjustReverse.UseVisualStyleBackColor = true;
+            // 
+            // rb_AdjustSimple
+            // 
+            this.rb_AdjustSimple.AutoSize = true;
+            this.rb_AdjustSimple.Checked = true;
+            this.rb_AdjustSimple.Location = new System.Drawing.Point(9, 19);
+            this.rb_AdjustSimple.Name = "rb_AdjustSimple";
+            this.rb_AdjustSimple.Size = new System.Drawing.Size(97, 17);
+            this.rb_AdjustSimple.TabIndex = 53;
+            this.rb_AdjustSimple.TabStop = true;
+            this.rb_AdjustSimple.Text = "Adjust payment";
+            this.rb_AdjustSimple.UseVisualStyleBackColor = true;
+            // 
+            // rb_AdjustRegular
+            // 
+            this.rb_AdjustRegular.AutoSize = true;
+            this.rb_AdjustRegular.Location = new System.Drawing.Point(9, 41);
+            this.rb_AdjustRegular.Name = "rb_AdjustRegular";
+            this.rb_AdjustRegular.Size = new System.Drawing.Size(132, 17);
+            this.rb_AdjustRegular.TabIndex = 52;
+            this.rb_AdjustRegular.Text = "Adjust regular payment";
+            this.rb_AdjustRegular.UseVisualStyleBackColor = true;
+            // 
             // edt_AdjustTrId
             // 
-            this.edt_AdjustTrId.Location = new System.Drawing.Point(128, 42);
+            this.edt_AdjustTrId.Location = new System.Drawing.Point(128, 90);
             this.edt_AdjustTrId.Name = "edt_AdjustTrId";
             this.edt_AdjustTrId.Size = new System.Drawing.Size(124, 20);
             this.edt_AdjustTrId.TabIndex = 51;
@@ -495,25 +538,15 @@
             // lbl_AdjustTrId
             // 
             this.lbl_AdjustTrId.AutoSize = true;
-            this.lbl_AdjustTrId.Location = new System.Drawing.Point(6, 45);
+            this.lbl_AdjustTrId.Location = new System.Drawing.Point(6, 93);
             this.lbl_AdjustTrId.Name = "lbl_AdjustTrId";
             this.lbl_AdjustTrId.Size = new System.Drawing.Size(80, 13);
             this.lbl_AdjustTrId.TabIndex = 50;
             this.lbl_AdjustTrId.Text = "Transaction ID:";
             // 
-            // cb_AdjustRegular
-            // 
-            this.cb_AdjustRegular.AutoSize = true;
-            this.cb_AdjustRegular.Location = new System.Drawing.Point(9, 19);
-            this.cb_AdjustRegular.Name = "cb_AdjustRegular";
-            this.cb_AdjustRegular.Size = new System.Drawing.Size(133, 17);
-            this.cb_AdjustRegular.TabIndex = 49;
-            this.cb_AdjustRegular.Text = "Adjust regular payment";
-            this.cb_AdjustRegular.UseVisualStyleBackColor = true;
-            // 
             // edt_AdjustPhone
             // 
-            this.edt_AdjustPhone.Location = new System.Drawing.Point(128, 94);
+            this.edt_AdjustPhone.Location = new System.Drawing.Point(128, 142);
             this.edt_AdjustPhone.Mask = "+7(000)000-00-00";
             this.edt_AdjustPhone.Name = "edt_AdjustPhone";
             this.edt_AdjustPhone.Size = new System.Drawing.Size(124, 20);
@@ -522,7 +555,7 @@
             // 
             // edt_AdjustEmail
             // 
-            this.edt_AdjustEmail.Location = new System.Drawing.Point(128, 68);
+            this.edt_AdjustEmail.Location = new System.Drawing.Point(128, 116);
             this.edt_AdjustEmail.Name = "edt_AdjustEmail";
             this.edt_AdjustEmail.Size = new System.Drawing.Size(124, 20);
             this.edt_AdjustEmail.TabIndex = 47;
@@ -530,7 +563,7 @@
             // lbl_AdjustPhone
             // 
             this.lbl_AdjustPhone.AutoSize = true;
-            this.lbl_AdjustPhone.Location = new System.Drawing.Point(6, 97);
+            this.lbl_AdjustPhone.Location = new System.Drawing.Point(6, 145);
             this.lbl_AdjustPhone.Name = "lbl_AdjustPhone";
             this.lbl_AdjustPhone.Size = new System.Drawing.Size(41, 13);
             this.lbl_AdjustPhone.TabIndex = 45;
@@ -539,7 +572,7 @@
             // lbl_AdjustEmail
             // 
             this.lbl_AdjustEmail.AutoSize = true;
-            this.lbl_AdjustEmail.Location = new System.Drawing.Point(6, 71);
+            this.lbl_AdjustEmail.Location = new System.Drawing.Point(6, 119);
             this.lbl_AdjustEmail.Name = "lbl_AdjustEmail";
             this.lbl_AdjustEmail.Size = new System.Drawing.Size(35, 13);
             this.lbl_AdjustEmail.TabIndex = 46;
@@ -547,7 +580,7 @@
             // 
             // btn_Adjust
             // 
-            this.btn_Adjust.Location = new System.Drawing.Point(278, 399);
+            this.btn_Adjust.Location = new System.Drawing.Point(278, 451);
             this.btn_Adjust.Name = "btn_Adjust";
             this.btn_Adjust.Size = new System.Drawing.Size(258, 30);
             this.btn_Adjust.TabIndex = 14;
@@ -579,7 +612,7 @@
             this.edt_Password.Name = "edt_Password";
             this.edt_Password.Size = new System.Drawing.Size(130, 20);
             this.edt_Password.TabIndex = 2;
-            this.edt_Password.Text = "integration123";
+            this.edt_Password.Text = "123123123";
             // 
             // edt_Login
             // 
@@ -587,13 +620,13 @@
             this.edt_Login.Name = "edt_Login";
             this.edt_Login.Size = new System.Drawing.Size(130, 20);
             this.edt_Login.TabIndex = 1;
-            this.edt_Login.Text = "agent@integration.demo";
+            this.edt_Login.Text = "agent@mac.demo";
             // 
             // gp_History
             // 
             this.gp_History.Controls.Add(this.edt_HistoryPage);
             this.gp_History.Controls.Add(this.lbl_HistoryPage);
-            this.gp_History.Location = new System.Drawing.Point(278, 435);
+            this.gp_History.Location = new System.Drawing.Point(278, 509);
             this.gp_History.Name = "gp_History";
             this.gp_History.Size = new System.Drawing.Size(258, 44);
             this.gp_History.TabIndex = 19;
@@ -620,7 +653,7 @@
             // 
             // btn_History
             // 
-            this.btn_History.Location = new System.Drawing.Point(278, 485);
+            this.btn_History.Location = new System.Drawing.Point(278, 559);
             this.btn_History.Name = "btn_History";
             this.btn_History.Size = new System.Drawing.Size(258, 30);
             this.btn_History.TabIndex = 20;
@@ -700,6 +733,13 @@
             this.edt_ImageFilePath.Size = new System.Drawing.Size(130, 20);
             this.edt_ImageFilePath.TabIndex = 103;
             // 
+            // edt_Com
+            // 
+            this.edt_Com.Location = new System.Drawing.Point(406, 13);
+            this.edt_Com.Name = "edt_Com";
+            this.edt_Com.Size = new System.Drawing.Size(130, 20);
+            this.edt_Com.TabIndex = 104;
+            // 
             // lbl_Com
             // 
             this.lbl_Com.AutoSize = true;
@@ -709,20 +749,75 @@
             this.lbl_Com.TabIndex = 105;
             this.lbl_Com.Text = "COM port name (BT only):";
             // 
-            // cmbComPorts
+            // btn_Reverse
             // 
-            this.cmbComPorts.FormattingEnabled = true;
-            this.cmbComPorts.Location = new System.Drawing.Point(406, 12);
-            this.cmbComPorts.Name = "cmbComPorts";
-            this.cmbComPorts.Size = new System.Drawing.Size(130, 21);
-            this.cmbComPorts.TabIndex = 106;
+            this.btn_Reverse.Location = new System.Drawing.Point(11, 653);
+            this.btn_Reverse.Name = "btn_Reverse";
+            this.btn_Reverse.Size = new System.Drawing.Size(261, 30);
+            this.btn_Reverse.TabIndex = 107;
+            this.btn_Reverse.Text = "Reverse Payment";
+            this.btn_Reverse.UseVisualStyleBackColor = true;
+            this.btn_Reverse.Click += new System.EventHandler(this.btn_Reverse_Click);
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.edt_ReverseID);
+            this.groupBox1.Controls.Add(this.rb_Cancel);
+            this.groupBox1.Controls.Add(this.rb_Return);
+            this.groupBox1.Controls.Add(this.label1);
+            this.groupBox1.Location = new System.Drawing.Point(11, 558);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(261, 89);
+            this.groupBox1.TabIndex = 106;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Reverse";
+            // 
+            // edt_ReverseID
+            // 
+            this.edt_ReverseID.Location = new System.Drawing.Point(92, 15);
+            this.edt_ReverseID.Name = "edt_ReverseID";
+            this.edt_ReverseID.Size = new System.Drawing.Size(163, 20);
+            this.edt_ReverseID.TabIndex = 56;
+            // 
+            // rb_Cancel
+            // 
+            this.rb_Cancel.AutoSize = true;
+            this.rb_Cancel.Checked = true;
+            this.rb_Cancel.Location = new System.Drawing.Point(9, 41);
+            this.rb_Cancel.Name = "rb_Cancel";
+            this.rb_Cancel.Size = new System.Drawing.Size(58, 17);
+            this.rb_Cancel.TabIndex = 55;
+            this.rb_Cancel.TabStop = true;
+            this.rb_Cancel.Text = "Cancel";
+            this.rb_Cancel.UseVisualStyleBackColor = true;
+            // 
+            // rb_Return
+            // 
+            this.rb_Return.AutoSize = true;
+            this.rb_Return.Location = new System.Drawing.Point(9, 63);
+            this.rb_Return.Name = "rb_Return";
+            this.rb_Return.Size = new System.Drawing.Size(57, 17);
+            this.rb_Return.TabIndex = 54;
+            this.rb_Return.Text = "Return";
+            this.rb_Return.UseVisualStyleBackColor = true;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(6, 18);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(80, 13);
+            this.label1.TabIndex = 29;
+            this.label1.Text = "Transaction ID:";
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1198, 563);
-            this.Controls.Add(this.cmbComPorts);
+            this.ClientSize = new System.Drawing.Size(1198, 695);
+            this.Controls.Add(this.btn_Reverse);
+            this.Controls.Add(this.groupBox1);
+            this.Controls.Add(this.edt_Com);
             this.Controls.Add(this.lbl_Com);
             this.Controls.Add(this.edt_ImageFilePath);
             this.Controls.Add(this.lbl_ImageFilePath);
@@ -758,6 +853,8 @@
             this.gp_History.PerformLayout();
             this.gp_Product.ResumeLayout(false);
             this.gp_Product.PerformLayout();
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -809,7 +906,6 @@
         private System.Windows.Forms.Label lbl_AdjustEmail;
         private System.Windows.Forms.TextBox edt_AdjustTrId;
         private System.Windows.Forms.Label lbl_AdjustTrId;
-        private System.Windows.Forms.CheckBox cb_AdjustRegular;
         private System.Windows.Forms.Button btn_Adjust;
         private System.Windows.Forms.Label lbl_Password;
         private System.Windows.Forms.Label lbl_Login;
@@ -827,8 +923,17 @@
         private System.Windows.Forms.Label lbl_Field1;
         private System.Windows.Forms.Label lbl_ImageFilePath;
         private System.Windows.Forms.TextBox edt_ImageFilePath;
+        private System.Windows.Forms.TextBox edt_Com;
         private System.Windows.Forms.Label lbl_Com;
-        private System.Windows.Forms.ComboBox cmbComPorts;
+        private System.Windows.Forms.RadioButton rb_AdjustReverse;
+        private System.Windows.Forms.RadioButton rb_AdjustSimple;
+        private System.Windows.Forms.RadioButton rb_AdjustRegular;
+        private System.Windows.Forms.Button btn_Reverse;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.RadioButton rb_Cancel;
+        private System.Windows.Forms.RadioButton rb_Return;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TextBox edt_ReverseID;
     }
 }
 

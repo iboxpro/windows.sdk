@@ -23,6 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -32,11 +33,40 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release-NET45|AnyCPU'">
+    <OutputPath>bin\Release-NET45\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <Optimize>false</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="iboxExternalSDK, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="BBPOS_USB_HID">
+      <HintPath>..\SDK\BBPOS_USB_HID.dll</HintPath>
+    </Reference>
+    <Reference Include="Cardport.Pro.SDK">
+      <HintPath>..\SDK\Cardport.Pro.SDK.dll</HintPath>
+    </Reference>
+    <Reference Include="DevReactor.Toolbox.SDK">
+      <HintPath>..\SDK\DevReactor.Toolbox.SDK.dll</HintPath>
+    </Reference>
+    <Reference Include="emvswipeapi-pcwd-1.0.0">
+      <HintPath>..\SDK\emvswipeapi-pcwd-1.0.0.dll</HintPath>
+    </Reference>
+    <Reference Include="iboxExternalSDK">
       <HintPath>..\SDK\iboxExternalSDK.dll</HintPath>
+    </Reference>
+    <Reference Include="NAudio">
+      <HintPath>..\SDK\NAudio.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\SDK\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -48,6 +78,9 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="wisepadapi-pcwd-3.6.3">
+      <HintPath>..\SDK\wisepadapi-pcwd-3.6.3.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MainForm.cs">
