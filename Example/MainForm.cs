@@ -113,6 +113,7 @@ namespace Example
             bool isRegular = cb_Regular.Checked;
             PaymentContext paymentContext = isRegular ? new RegularPaymentContext() : new PaymentContext();
             paymentContext.Amount = Decimal.Parse(edt_Amount.Text);
+            paymentContext.Currency = rb_RUB.Checked ? Currency.RUB : Currency.VND;
             paymentContext.Description = edt_Description.Text;
 
             string path = edt_ImageFilePath.Text;

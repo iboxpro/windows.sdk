@@ -100,11 +100,15 @@
             this.rb_Cancel = new System.Windows.Forms.RadioButton();
             this.rb_Return = new System.Windows.Forms.RadioButton();
             this.label1 = new System.Windows.Forms.Label();
+            this.gb_Currency = new System.Windows.Forms.GroupBox();
+            this.rb_RUB = new System.Windows.Forms.RadioButton();
+            this.rb_VND = new System.Windows.Forms.RadioButton();
             this.gp_Regular.SuspendLayout();
             this.gp_Adjust.SuspendLayout();
             this.gp_History.SuspendLayout();
             this.gp_Product.SuspendLayout();
             this.groupBox1.SuspendLayout();
+            this.gb_Currency.SuspendLayout();
             this.SuspendLayout();
             // 
             // btn_Enable
@@ -185,9 +189,9 @@
             // 
             // btn_ClearLog
             // 
-            this.btn_ClearLog.Location = new System.Drawing.Point(278, 595);
+            this.btn_ClearLog.Location = new System.Drawing.Point(278, 635);
             this.btn_ClearLog.Name = "btn_ClearLog";
-            this.btn_ClearLog.Size = new System.Drawing.Size(258, 88);
+            this.btn_ClearLog.Size = new System.Drawing.Size(258, 48);
             this.btn_ClearLog.TabIndex = 9;
             this.btn_ClearLog.Text = "Clear log";
             this.btn_ClearLog.UseVisualStyleBackColor = true;
@@ -196,7 +200,7 @@
             // cb_Regular
             // 
             this.cb_Regular.AutoSize = true;
-            this.cb_Regular.Location = new System.Drawing.Point(280, 147);
+            this.cb_Regular.Location = new System.Drawing.Point(287, 212);
             this.cb_Regular.Name = "cb_Regular";
             this.cb_Regular.Size = new System.Drawing.Size(106, 17);
             this.cb_Regular.TabIndex = 11;
@@ -489,7 +493,7 @@
             this.gp_Adjust.Controls.Add(this.edt_AdjustEmail);
             this.gp_Adjust.Controls.Add(this.lbl_AdjustPhone);
             this.gp_Adjust.Controls.Add(this.lbl_AdjustEmail);
-            this.gp_Adjust.Location = new System.Drawing.Point(278, 275);
+            this.gp_Adjust.Location = new System.Drawing.Point(275, 338);
             this.gp_Adjust.Name = "gp_Adjust";
             this.gp_Adjust.Size = new System.Drawing.Size(258, 170);
             this.gp_Adjust.TabIndex = 13;
@@ -580,7 +584,7 @@
             // 
             // btn_Adjust
             // 
-            this.btn_Adjust.Location = new System.Drawing.Point(278, 451);
+            this.btn_Adjust.Location = new System.Drawing.Point(275, 514);
             this.btn_Adjust.Name = "btn_Adjust";
             this.btn_Adjust.Size = new System.Drawing.Size(258, 30);
             this.btn_Adjust.TabIndex = 14;
@@ -612,7 +616,7 @@
             this.edt_Password.Name = "edt_Password";
             this.edt_Password.Size = new System.Drawing.Size(130, 20);
             this.edt_Password.TabIndex = 2;
-            this.edt_Password.Text = "123123123";
+            this.edt_Password.Text = "triton";
             // 
             // edt_Login
             // 
@@ -620,13 +624,13 @@
             this.edt_Login.Name = "edt_Login";
             this.edt_Login.Size = new System.Drawing.Size(130, 20);
             this.edt_Login.TabIndex = 1;
-            this.edt_Login.Text = "agent@mac.demo";
+            this.edt_Login.Text = "pf@cardport.kiev";
             // 
             // gp_History
             // 
             this.gp_History.Controls.Add(this.edt_HistoryPage);
             this.gp_History.Controls.Add(this.lbl_HistoryPage);
-            this.gp_History.Location = new System.Drawing.Point(278, 509);
+            this.gp_History.Location = new System.Drawing.Point(275, 549);
             this.gp_History.Name = "gp_History";
             this.gp_History.Size = new System.Drawing.Size(258, 44);
             this.gp_History.TabIndex = 19;
@@ -653,7 +657,7 @@
             // 
             // btn_History
             // 
-            this.btn_History.Location = new System.Drawing.Point(278, 559);
+            this.btn_History.Location = new System.Drawing.Point(278, 599);
             this.btn_History.Name = "btn_History";
             this.btn_History.Size = new System.Drawing.Size(258, 30);
             this.btn_History.TabIndex = 20;
@@ -664,7 +668,7 @@
             // cb_Product
             // 
             this.cb_Product.AutoSize = true;
-            this.cb_Product.Location = new System.Drawing.Point(280, 170);
+            this.cb_Product.Location = new System.Drawing.Point(287, 235);
             this.cb_Product.Name = "cb_Product";
             this.cb_Product.Size = new System.Drawing.Size(127, 17);
             this.cb_Product.TabIndex = 100;
@@ -678,7 +682,7 @@
             this.gp_Product.Controls.Add(this.edt_Field1);
             this.gp_Product.Controls.Add(this.lbl_Field2);
             this.gp_Product.Controls.Add(this.lbl_Field1);
-            this.gp_Product.Location = new System.Drawing.Point(278, 196);
+            this.gp_Product.Location = new System.Drawing.Point(275, 259);
             this.gp_Product.Name = "gp_Product";
             this.gp_Product.Size = new System.Drawing.Size(258, 73);
             this.gp_Product.TabIndex = 101;
@@ -810,11 +814,46 @@
             this.label1.TabIndex = 29;
             this.label1.Text = "Transaction ID:";
             // 
+            // gb_Currency
+            // 
+            this.gb_Currency.Controls.Add(this.rb_VND);
+            this.gb_Currency.Controls.Add(this.rb_RUB);
+            this.gb_Currency.Location = new System.Drawing.Point(275, 141);
+            this.gb_Currency.Name = "gb_Currency";
+            this.gb_Currency.Size = new System.Drawing.Size(261, 62);
+            this.gb_Currency.TabIndex = 108;
+            this.gb_Currency.TabStop = false;
+            this.gb_Currency.Text = "Currency";
+            // 
+            // rb_RUB
+            // 
+            this.rb_RUB.AutoSize = true;
+            this.rb_RUB.Checked = true;
+            this.rb_RUB.Location = new System.Drawing.Point(12, 19);
+            this.rb_RUB.Name = "rb_RUB";
+            this.rb_RUB.Size = new System.Drawing.Size(59, 17);
+            this.rb_RUB.TabIndex = 0;
+            this.rb_RUB.TabStop = true;
+            this.rb_RUB.Text = "Rouble";
+            this.rb_RUB.UseVisualStyleBackColor = true;
+            // 
+            // rb_VND
+            // 
+            this.rb_VND.AutoSize = true;
+            this.rb_VND.Location = new System.Drawing.Point(12, 42);
+            this.rb_VND.Name = "rb_VND";
+            this.rb_VND.Size = new System.Drawing.Size(51, 17);
+            this.rb_VND.TabIndex = 1;
+            this.rb_VND.TabStop = true;
+            this.rb_VND.Text = "Dong";
+            this.rb_VND.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1198, 695);
+            this.Controls.Add(this.gb_Currency);
             this.Controls.Add(this.btn_Reverse);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.edt_Com);
@@ -855,6 +894,8 @@
             this.gp_Product.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            this.gb_Currency.ResumeLayout(false);
+            this.gb_Currency.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -934,6 +975,9 @@
         private System.Windows.Forms.RadioButton rb_Return;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox edt_ReverseID;
+        private System.Windows.Forms.GroupBox gb_Currency;
+        private System.Windows.Forms.RadioButton rb_VND;
+        private System.Windows.Forms.RadioButton rb_RUB;
     }
 }
 
