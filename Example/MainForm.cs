@@ -2,6 +2,7 @@
 using System.Windows.Forms;
 
 using Ibox.Pro.SDK.External;
+using System.Drawing;
 using System.Linq;
 using System.Collections.Generic;
 using Ibox.Pro.SDK.External.Result;
@@ -18,8 +19,11 @@ namespace Example
         private const string PRODUCT_FIELD_1_CODE = "FIELD_1";
         private const string PRODUCT_FIELD_2_CODE = "FIELD_2";
 
+        private Font fntRegular = new Font("Courier New", 8.25F);
+        private Font fntStrikeout = new Font("Courier New", 8.25F, FontStyle.Strikeout);
+
         private PaymentController m_PaymentController = PaymentController.Instance;
-        private string divider = new string('=', 88);
+        private string divider = new string('=', 93);
 
         public MainForm()
         {
@@ -81,7 +85,7 @@ namespace Example
             m_PaymentController.SetCredentials(edt_Login.Text, edt_Password.Text);
         }
 
-        private void log(string log)
+        private void log(string log, Color? color = null, bool strikethrough = false)
         {
             try
             {
@@ -91,7 +95,20 @@ namespace Example
                             try
                             {
                                 if (!edt_Log.Disposing && !edt_Log.IsDisposed)
+                                {
+
+                                    if (color == null)
+                                        edt_Log.SelectionColor = Color.Black;
+                                    else
+                                        edt_Log.SelectionColor = (Color)color;
+
+                                    if (strikethrough)
+                                        edt_Log.SelectionFont = fntStrikeout;
+                                    else
+                                        edt_Log.SelectionFont = fntRegular;
+
                                     edt_Log.AppendText(log + Environment.NewLine);
+                                }
                             }
                             catch (ObjectDisposedException e)
                             {
@@ -109,12 +126,14 @@ namespace Example
         {
             setCredentials();
 
+            PaymentController.Instance.SinglestepEMV = cb_SinglestepEMV.Checked;
             bool hasProduct = cb_Product.Checked;
             bool isRegular = cb_Regular.Checked;
             PaymentContext paymentContext = isRegular ? new RegularPaymentContext() : new PaymentContext();
-            paymentContext.Amount = Decimal.Parse(edt_Amount.Text);
+            paymentContext.Amount = decimal.Parse(edt_Amount.Text);
             paymentContext.Currency = rb_RUB.Checked ? Currency.RUB : Currency.VND;
             paymentContext.Description = edt_Description.Text;
+            paymentContext.Cash = cb_Cash.Checked;
 
             string path = edt_ImageFilePath.Text;
             if (!string.IsNullOrEmpty(path))
@@ -221,7 +240,8 @@ namespace Example
             {
                 String trID = edt_ReverseID.Text;
                 ReverseMode mode = rb_Cancel.Checked ? ReverseMode.Cancel : ReverseMode.Return;
-                m_PaymentController.StartReverse(trID, mode);
+                decimal? amountToReverse = string.IsNullOrEmpty(edt_ReverseAmount.Text) ? null : (decimal?)decimal.Parse(edt_ReverseAmount.Text);
+                m_PaymentController.StartReverse(trID, mode, amountToReverse);
                 log(divider);
                 log(string.Format("{0} PAYMENT : {1}{2}", mode == ReverseMode.Cancel ? "CANCEL" : "RETURN", Environment.NewLine, trID));
             }
@@ -282,10 +302,28 @@ namespace Example
                 APIGetHistoryResult result = PaymentController.Instance.GetHistory(page);
                 if (result != null && result.ErrorCode == 0)
                 {
-                    log(string.Format("{0,-16}  {1,-20} {2,-10} {3}", "DateTime", "Description", "Amount", "ID"));
+                    log(string.Format("{0,-18}  {1,-25} {2,-10} {3}", "DateTime", "Description", "Balance", "ID"));
                     if (result.Transactions != null)
                         foreach (Ibox.Pro.SDK.External.Entry.Transaction transaction in result.Transactions)
-                            log(string.Format("{0,-16:dd.MM.yyyy hh:mm}   {1,-20} {2,-10} {3}", transaction.Date, transaction.Description, string.Format(transaction.AmountFormat, transaction.Amount), transaction.ID));
+                        {
+                            Color color = Color.Black;
+                            switch (transaction.DisplayMode)
+                            {
+                                case Ibox.Pro.SDK.External.Entry.DisplayMode.Success:
+                                    color = Color.Green;
+                                    break;
+                                case Ibox.Pro.SDK.External.Entry.DisplayMode.Reverse:
+                                case Ibox.Pro.SDK.External.Entry.DisplayMode.Reversed:
+                                    color = Color.SlateGray;
+                                    break;
+                                case Ibox.Pro.SDK.External.Entry.DisplayMode.Declined:
+                                    color = Color.OrangeRed;
+                                    break;
+                            }
+                            log(string.Format("{0,-17:dd.MM.yyyy hh:mm}   {1,-25} {2,-10} {3}", 
+                                transaction.Date, transaction.Description, string.Format(transaction.AmountFormat, transaction.Balance), transaction.ID),
+                                color, !transaction.Canceled);
+                        }
                 }
                 else
                 {
@@ -496,5 +534,10 @@ namespace Example
         }
 
         #endregion
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            m_PaymentController.CancelPayment();
+        }
     }
 }

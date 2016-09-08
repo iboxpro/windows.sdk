@@ -30,7 +30,6 @@
         {
             this.btn_Enable = new System.Windows.Forms.Button();
             this.btn_Disable = new System.Windows.Forms.Button();
-            this.edt_Log = new System.Windows.Forms.TextBox();
             this.btn_StartPayment = new System.Windows.Forms.Button();
             this.edt_Description = new System.Windows.Forms.TextBox();
             this.lbl_Amount = new System.Windows.Forms.Label();
@@ -96,13 +95,19 @@
             this.lbl_Com = new System.Windows.Forms.Label();
             this.btn_Reverse = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.edt_ReverseAmount = new System.Windows.Forms.MaskedTextBox();
+            this.lbl_ReverseAmount = new System.Windows.Forms.Label();
             this.edt_ReverseID = new System.Windows.Forms.TextBox();
             this.rb_Cancel = new System.Windows.Forms.RadioButton();
             this.rb_Return = new System.Windows.Forms.RadioButton();
-            this.label1 = new System.Windows.Forms.Label();
+            this.lbl_ReverseID = new System.Windows.Forms.Label();
             this.gb_Currency = new System.Windows.Forms.GroupBox();
-            this.rb_RUB = new System.Windows.Forms.RadioButton();
             this.rb_VND = new System.Windows.Forms.RadioButton();
+            this.rb_RUB = new System.Windows.Forms.RadioButton();
+            this.btnCancel = new System.Windows.Forms.Button();
+            this.cb_SinglestepEMV = new System.Windows.Forms.CheckBox();
+            this.edt_Log = new System.Windows.Forms.RichTextBox();
+            this.cb_Cash = new System.Windows.Forms.CheckBox();
             this.gp_Regular.SuspendLayout();
             this.gp_Adjust.SuspendLayout();
             this.gp_History.SuspendLayout();
@@ -131,22 +136,11 @@
             this.btn_Disable.UseVisualStyleBackColor = true;
             this.btn_Disable.Click += new System.EventHandler(this.btn_Stop_Click);
             // 
-            // edt_Log
-            // 
-            this.edt_Log.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.edt_Log.Location = new System.Drawing.Point(542, 12);
-            this.edt_Log.Multiline = true;
-            this.edt_Log.Name = "edt_Log";
-            this.edt_Log.ReadOnly = true;
-            this.edt_Log.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.edt_Log.Size = new System.Drawing.Size(644, 671);
-            this.edt_Log.TabIndex = 2;
-            // 
             // btn_StartPayment
             // 
             this.btn_StartPayment.Location = new System.Drawing.Point(278, 111);
             this.btn_StartPayment.Name = "btn_StartPayment";
-            this.btn_StartPayment.Size = new System.Drawing.Size(258, 30);
+            this.btn_StartPayment.Size = new System.Drawing.Size(115, 30);
             this.btn_StartPayment.TabIndex = 3;
             this.btn_StartPayment.Text = "Start payment";
             this.btn_StartPayment.UseVisualStyleBackColor = true;
@@ -185,13 +179,13 @@
             this.edt_Amount.PromptChar = ' ';
             this.edt_Amount.Size = new System.Drawing.Size(130, 20);
             this.edt_Amount.TabIndex = 3;
-            this.edt_Amount.Text = "10";
+            this.edt_Amount.Text = "100";
             // 
             // btn_ClearLog
             // 
-            this.btn_ClearLog.Location = new System.Drawing.Point(278, 635);
+            this.btn_ClearLog.Location = new System.Drawing.Point(275, 678);
             this.btn_ClearLog.Name = "btn_ClearLog";
-            this.btn_ClearLog.Size = new System.Drawing.Size(258, 48);
+            this.btn_ClearLog.Size = new System.Drawing.Size(258, 30);
             this.btn_ClearLog.TabIndex = 9;
             this.btn_ClearLog.Text = "Clear log";
             this.btn_ClearLog.UseVisualStyleBackColor = true;
@@ -200,7 +194,7 @@
             // cb_Regular
             // 
             this.cb_Regular.AutoSize = true;
-            this.cb_Regular.Location = new System.Drawing.Point(287, 212);
+            this.cb_Regular.Location = new System.Drawing.Point(284, 235);
             this.cb_Regular.Name = "cb_Regular";
             this.cb_Regular.Size = new System.Drawing.Size(106, 17);
             this.cb_Regular.TabIndex = 11;
@@ -493,7 +487,7 @@
             this.gp_Adjust.Controls.Add(this.edt_AdjustEmail);
             this.gp_Adjust.Controls.Add(this.lbl_AdjustPhone);
             this.gp_Adjust.Controls.Add(this.lbl_AdjustEmail);
-            this.gp_Adjust.Location = new System.Drawing.Point(275, 338);
+            this.gp_Adjust.Location = new System.Drawing.Point(275, 380);
             this.gp_Adjust.Name = "gp_Adjust";
             this.gp_Adjust.Size = new System.Drawing.Size(258, 170);
             this.gp_Adjust.TabIndex = 13;
@@ -584,7 +578,7 @@
             // 
             // btn_Adjust
             // 
-            this.btn_Adjust.Location = new System.Drawing.Point(275, 514);
+            this.btn_Adjust.Location = new System.Drawing.Point(275, 556);
             this.btn_Adjust.Name = "btn_Adjust";
             this.btn_Adjust.Size = new System.Drawing.Size(258, 30);
             this.btn_Adjust.TabIndex = 14;
@@ -630,7 +624,7 @@
             // 
             this.gp_History.Controls.Add(this.edt_HistoryPage);
             this.gp_History.Controls.Add(this.lbl_HistoryPage);
-            this.gp_History.Location = new System.Drawing.Point(275, 549);
+            this.gp_History.Location = new System.Drawing.Point(275, 592);
             this.gp_History.Name = "gp_History";
             this.gp_History.Size = new System.Drawing.Size(258, 44);
             this.gp_History.TabIndex = 19;
@@ -657,7 +651,7 @@
             // 
             // btn_History
             // 
-            this.btn_History.Location = new System.Drawing.Point(278, 599);
+            this.btn_History.Location = new System.Drawing.Point(275, 642);
             this.btn_History.Name = "btn_History";
             this.btn_History.Size = new System.Drawing.Size(258, 30);
             this.btn_History.TabIndex = 20;
@@ -668,7 +662,7 @@
             // cb_Product
             // 
             this.cb_Product.AutoSize = true;
-            this.cb_Product.Location = new System.Drawing.Point(287, 235);
+            this.cb_Product.Location = new System.Drawing.Point(284, 258);
             this.cb_Product.Name = "cb_Product";
             this.cb_Product.Size = new System.Drawing.Size(127, 17);
             this.cb_Product.TabIndex = 100;
@@ -682,7 +676,7 @@
             this.gp_Product.Controls.Add(this.edt_Field1);
             this.gp_Product.Controls.Add(this.lbl_Field2);
             this.gp_Product.Controls.Add(this.lbl_Field1);
-            this.gp_Product.Location = new System.Drawing.Point(275, 259);
+            this.gp_Product.Location = new System.Drawing.Point(275, 306);
             this.gp_Product.Name = "gp_Product";
             this.gp_Product.Size = new System.Drawing.Size(258, 73);
             this.gp_Product.TabIndex = 101;
@@ -755,7 +749,7 @@
             // 
             // btn_Reverse
             // 
-            this.btn_Reverse.Location = new System.Drawing.Point(11, 653);
+            this.btn_Reverse.Location = new System.Drawing.Point(11, 678);
             this.btn_Reverse.Name = "btn_Reverse";
             this.btn_Reverse.Size = new System.Drawing.Size(261, 30);
             this.btn_Reverse.TabIndex = 107;
@@ -765,16 +759,35 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.edt_ReverseAmount);
+            this.groupBox1.Controls.Add(this.lbl_ReverseAmount);
             this.groupBox1.Controls.Add(this.edt_ReverseID);
             this.groupBox1.Controls.Add(this.rb_Cancel);
             this.groupBox1.Controls.Add(this.rb_Return);
-            this.groupBox1.Controls.Add(this.label1);
+            this.groupBox1.Controls.Add(this.lbl_ReverseID);
             this.groupBox1.Location = new System.Drawing.Point(11, 558);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(261, 89);
+            this.groupBox1.Size = new System.Drawing.Size(261, 114);
             this.groupBox1.TabIndex = 106;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Reverse";
+            // 
+            // edt_ReverseAmount
+            // 
+            this.edt_ReverseAmount.Location = new System.Drawing.Point(92, 41);
+            this.edt_ReverseAmount.Name = "edt_ReverseAmount";
+            this.edt_ReverseAmount.PromptChar = ' ';
+            this.edt_ReverseAmount.Size = new System.Drawing.Size(163, 20);
+            this.edt_ReverseAmount.TabIndex = 58;
+            // 
+            // lbl_ReverseAmount
+            // 
+            this.lbl_ReverseAmount.AutoSize = true;
+            this.lbl_ReverseAmount.Location = new System.Drawing.Point(6, 44);
+            this.lbl_ReverseAmount.Name = "lbl_ReverseAmount";
+            this.lbl_ReverseAmount.Size = new System.Drawing.Size(46, 13);
+            this.lbl_ReverseAmount.TabIndex = 57;
+            this.lbl_ReverseAmount.Text = "Amount:";
             // 
             // edt_ReverseID
             // 
@@ -787,7 +800,7 @@
             // 
             this.rb_Cancel.AutoSize = true;
             this.rb_Cancel.Checked = true;
-            this.rb_Cancel.Location = new System.Drawing.Point(9, 41);
+            this.rb_Cancel.Location = new System.Drawing.Point(9, 67);
             this.rb_Cancel.Name = "rb_Cancel";
             this.rb_Cancel.Size = new System.Drawing.Size(58, 17);
             this.rb_Cancel.TabIndex = 55;
@@ -798,21 +811,21 @@
             // rb_Return
             // 
             this.rb_Return.AutoSize = true;
-            this.rb_Return.Location = new System.Drawing.Point(9, 63);
+            this.rb_Return.Location = new System.Drawing.Point(9, 90);
             this.rb_Return.Name = "rb_Return";
             this.rb_Return.Size = new System.Drawing.Size(57, 17);
             this.rb_Return.TabIndex = 54;
             this.rb_Return.Text = "Return";
             this.rb_Return.UseVisualStyleBackColor = true;
             // 
-            // label1
+            // lbl_ReverseID
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(6, 18);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(80, 13);
-            this.label1.TabIndex = 29;
-            this.label1.Text = "Transaction ID:";
+            this.lbl_ReverseID.AutoSize = true;
+            this.lbl_ReverseID.Location = new System.Drawing.Point(6, 18);
+            this.lbl_ReverseID.Name = "lbl_ReverseID";
+            this.lbl_ReverseID.Size = new System.Drawing.Size(80, 13);
+            this.lbl_ReverseID.TabIndex = 29;
+            this.lbl_ReverseID.Text = "Transaction ID:";
             // 
             // gb_Currency
             // 
@@ -825,22 +838,10 @@
             this.gb_Currency.TabStop = false;
             this.gb_Currency.Text = "Currency";
             // 
-            // rb_RUB
-            // 
-            this.rb_RUB.AutoSize = true;
-            this.rb_RUB.Checked = true;
-            this.rb_RUB.Location = new System.Drawing.Point(12, 19);
-            this.rb_RUB.Name = "rb_RUB";
-            this.rb_RUB.Size = new System.Drawing.Size(59, 17);
-            this.rb_RUB.TabIndex = 0;
-            this.rb_RUB.TabStop = true;
-            this.rb_RUB.Text = "Rouble";
-            this.rb_RUB.UseVisualStyleBackColor = true;
-            // 
             // rb_VND
             // 
             this.rb_VND.AutoSize = true;
-            this.rb_VND.Location = new System.Drawing.Point(12, 42);
+            this.rb_VND.Location = new System.Drawing.Point(9, 42);
             this.rb_VND.Name = "rb_VND";
             this.rb_VND.Size = new System.Drawing.Size(51, 17);
             this.rb_VND.TabIndex = 1;
@@ -848,11 +849,73 @@
             this.rb_VND.Text = "Dong";
             this.rb_VND.UseVisualStyleBackColor = true;
             // 
+            // rb_RUB
+            // 
+            this.rb_RUB.AutoSize = true;
+            this.rb_RUB.Checked = true;
+            this.rb_RUB.Location = new System.Drawing.Point(9, 19);
+            this.rb_RUB.Name = "rb_RUB";
+            this.rb_RUB.Size = new System.Drawing.Size(59, 17);
+            this.rb_RUB.TabIndex = 0;
+            this.rb_RUB.TabStop = true;
+            this.rb_RUB.Text = "Rouble";
+            this.rb_RUB.UseVisualStyleBackColor = true;
+            // 
+            // btnCancel
+            // 
+            this.btnCancel.Location = new System.Drawing.Point(399, 111);
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.Size = new System.Drawing.Size(137, 30);
+            this.btnCancel.TabIndex = 109;
+            this.btnCancel.Text = "Cancel";
+            this.btnCancel.UseVisualStyleBackColor = true;
+            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
+            // 
+            // cb_SinglestepEMV
+            // 
+            this.cb_SinglestepEMV.AutoSize = true;
+            this.cb_SinglestepEMV.Location = new System.Drawing.Point(284, 281);
+            this.cb_SinglestepEMV.Name = "cb_SinglestepEMV";
+            this.cb_SinglestepEMV.Size = new System.Drawing.Size(101, 17);
+            this.cb_SinglestepEMV.TabIndex = 110;
+            this.cb_SinglestepEMV.Text = "Singlestep EMV";
+            this.cb_SinglestepEMV.UseVisualStyleBackColor = true;
+            // 
+            // edt_Log
+            // 
+            this.edt_Log.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.edt_Log.BackColor = System.Drawing.SystemColors.Control;
+            this.edt_Log.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.edt_Log.Font = new System.Drawing.Font("Courier New", 8.25F);
+            this.edt_Log.Location = new System.Drawing.Point(542, 13);
+            this.edt_Log.Name = "edt_Log";
+            this.edt_Log.ReadOnly = true;
+            this.edt_Log.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
+            this.edt_Log.Size = new System.Drawing.Size(698, 695);
+            this.edt_Log.TabIndex = 111;
+            this.edt_Log.Text = "";
+            // 
+            // cb_Cash
+            // 
+            this.cb_Cash.AutoSize = true;
+            this.cb_Cash.Location = new System.Drawing.Point(284, 212);
+            this.cb_Cash.Name = "cb_Cash";
+            this.cb_Cash.Size = new System.Drawing.Size(50, 17);
+            this.cb_Cash.TabIndex = 112;
+            this.cb_Cash.Text = "Cash";
+            this.cb_Cash.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1198, 695);
+            this.ClientSize = new System.Drawing.Size(1252, 720);
+            this.Controls.Add(this.cb_Cash);
+            this.Controls.Add(this.edt_Log);
+            this.Controls.Add(this.cb_SinglestepEMV);
+            this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.gb_Currency);
             this.Controls.Add(this.btn_Reverse);
             this.Controls.Add(this.groupBox1);
@@ -878,7 +941,6 @@
             this.Controls.Add(this.lbl_Amount);
             this.Controls.Add(this.edt_Description);
             this.Controls.Add(this.btn_StartPayment);
-            this.Controls.Add(this.edt_Log);
             this.Controls.Add(this.btn_Disable);
             this.Controls.Add(this.btn_Enable);
             this.Name = "MainForm";
@@ -905,7 +967,6 @@
 
         private System.Windows.Forms.Button btn_Enable;
         private System.Windows.Forms.Button btn_Disable;
-        private System.Windows.Forms.TextBox edt_Log;
         private System.Windows.Forms.Button btn_StartPayment;
         private System.Windows.Forms.TextBox edt_Description;
         private System.Windows.Forms.Label lbl_Amount;
@@ -973,11 +1034,17 @@
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.RadioButton rb_Cancel;
         private System.Windows.Forms.RadioButton rb_Return;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label lbl_ReverseID;
         private System.Windows.Forms.TextBox edt_ReverseID;
         private System.Windows.Forms.GroupBox gb_Currency;
         private System.Windows.Forms.RadioButton rb_VND;
         private System.Windows.Forms.RadioButton rb_RUB;
+        private System.Windows.Forms.Button btnCancel;
+        private System.Windows.Forms.CheckBox cb_SinglestepEMV;
+        private System.Windows.Forms.RichTextBox edt_Log;
+        private System.Windows.Forms.Label lbl_ReverseAmount;
+        private System.Windows.Forms.MaskedTextBox edt_ReverseAmount;
+        private System.Windows.Forms.CheckBox cb_Cash;
     }
 }
 
