@@ -7,9 +7,13 @@ using System.Linq;
 using System.Collections.Generic;
 using Ibox.Pro.SDK.External.Result;
 using System.IO;
+using System.Management;
 using Ibox.Pro.SDK.External.Context;
-using System.Reflection;
 using System.Threading.Tasks;
+using System.Threading;
+using System.IO.Ports;
+using InTheHand.Net.Sockets;
+using InTheHand.Net;
 
 namespace Example
 {
@@ -23,6 +27,7 @@ namespace Example
         private Font fntStrikeout = new Font("Courier New", 8.25F, FontStyle.Strikeout);
 
         private PaymentController m_PaymentController = PaymentController.Instance;
+        private List<PortInfo> portInfos = new List<PortInfo>();
         private string divider = new string('=', 93);
 
         public MainForm()
@@ -39,15 +44,6 @@ namespace Example
             m_PaymentController.TransactionStartedEvent += onTransactionStarted;
             m_PaymentController.TransactionFinishedEvent += onPaymentFinished;
             m_PaymentController.ReverseEvent += onReverseEvent;
-
-            try
-            {
-                m_PaymentController.SetReaderType(ReaderType.Wisepad, string.IsNullOrEmpty(edt_Com.Text) ? null : edt_Com.Text);
-            }
-            catch (InvalidOperationException ex)
-            {
-                log(string.Format("ERROR : {0}", ex.Message));
-            }
         }
 
         private void initControls()
@@ -377,14 +373,16 @@ namespace Example
                 + " ID : {0}" + Environment.NewLine
                 + " Invoice : {1}" + Environment.NewLine
                 + " ApprovalCode : {2}" + Environment.NewLine
-                + " DateTime : {3}" + Environment.NewLine
-                + " PAN : {4}" + Environment.NewLine
-                + " Terminal : {5}" + Environment.NewLine
-                + " EMVdata : {6}" + Environment.NewLine
-                + " RequiresSignature : {7}",
+                + " Amount : {3}" + Environment.NewLine
+                + " DateTime : {4}" + Environment.NewLine
+                + " PAN : {5}" + Environment.NewLine
+                + " Terminal : {6}" + Environment.NewLine
+                + " EMVdata : {7}" + Environment.NewLine
+                + " RequiresSignature : {8}",
                 result.TransactionItem.ID,
                 result.TransactionItem.Invoice,
                 result.TransactionItem.AcquirerApprovalCode,
+                result.TransactionItem.Amount,
                 result.TransactionItem.Date,
                 result.TransactionItem.Card != null ? result.TransactionItem.Card.PANMasked : "null",
                 result.TerminalName, result.EmvData,
@@ -402,8 +400,23 @@ namespace Example
         #region UI actions        
         private void btn_Start_Click(object sender, EventArgs e)
         {
+            try
+            {
+                RadioButton checkedReader = gb_Reader.Controls.OfType<RadioButton>().FirstOrDefault(btn => btn.Checked);
+                ReaderType readerType = (ReaderType)Enum.Parse(typeof(ReaderType), checkedReader.Text, true);
+
+                PortInfo selectedPort = null;
+                if (portInfos != null && portInfos.Count > 0 && cmb_Paired.SelectedIndex != -1)
+                    selectedPort = portInfos[cmb_Paired.SelectedIndex];
+                m_PaymentController.SetReaderType(readerType, (cb_Usb.Checked || selectedPort == null) ? null : selectedPort.portName);
+            }
+            catch (InvalidOperationException ex)
+            {
+                log(string.Format("ERROR : {0}", ex.Message));
+            }
+
             //DEBUG
-            //m_PaymentController.Logger = log;
+            //m_PaymentController.Logger = delegate (string s_log) { log(s_log, Color.Blue); };
             //
 
             m_PaymentController.Enable();
@@ -424,7 +437,6 @@ namespace Example
             reversePayment();
         }
 
-
         private void btn_ClearLog_Click(object sender, EventArgs e)
         {
             edt_Log.Clear();
@@ -432,14 +444,14 @@ namespace Example
 
         private void cb_Regular_CheckedChanged(object sender, EventArgs e)
         {
-            gp_Regular.Enabled = cb_Regular.Checked;
+            gb_Regular.Enabled = cb_Regular.Checked;
         }
 
         private void cbl_RepeatType_SelectedIndexChanged(object sender, EventArgs e)
         {
             RepeatType repeatType = (RepeatType)cbl_RepeatType.SelectedIndex;
 
-            var controls = gp_Regular.Controls;
+            var controls = gb_Regular.Controls;
             foreach (Control control in controls)
                 control.Enabled = false;
 
@@ -525,7 +537,7 @@ namespace Example
 
         private void cb_Product_CheckedChanged(object sender, EventArgs e)
         {
-            gp_Product.Enabled = cb_Product.Checked;
+            gb_Product.Enabled = cb_Product.Checked;
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -533,11 +545,124 @@ namespace Example
             m_PaymentController.Disable();
         }
 
-        #endregion
-
         private void btnCancel_Click(object sender, EventArgs e)
         {
             m_PaymentController.CancelPayment();
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            new Thread(() =>
+            {
+                try
+                {
+                    cmb_Paired.Invoke((MethodInvoker)delegate
+                    {
+                        cmb_Paired.Items.Clear();
+                        cmb_Paired.Enabled = false;
+                        cmb_Paired.Text = "Loading paired devices...";
+                    });
+
+                    ManagementObjectSearcher ManObjSearch = new ManagementObjectSearcher("Select * from Win32_SerialPort where PNPDeviceID like 'BTHENUM%'");
+                    ManagementObjectCollection ManObjReturn = ManObjSearch.Get();
+
+                    foreach (ManagementObject ManObj in ManObjReturn)
+                    {
+                        string portName = ManObj["DeviceID"].ToString();
+                        string pnpDeviceID = ManObj["PNPDeviceID"].ToString();
+
+                        Console.WriteLine(portName + " " + pnpDeviceID);
+
+                        string macAddress;
+
+                        try
+                        {
+                            int startIndex = pnpDeviceID.LastIndexOf('&') + 1;
+                            int endIndex = pnpDeviceID.LastIndexOf('_');
+                            macAddress = pnpDeviceID.Substring(startIndex, endIndex - startIndex);
+                        }
+                        catch
+                        {
+                            continue;
+                        }
+
+                        if (macAddress == "000000000000")
+                        {
+                            continue;
+                        }
+
+                        BluetoothAddress bluetoothAddress = BluetoothAddress.CreateFromBigEndian(hexToByteArray(macAddress));
+                        BluetoothDeviceInfo bluetoothDeviceInfo = new BluetoothDeviceInfo(bluetoothAddress);
+                        string deviceName = bluetoothDeviceInfo.DeviceName;
+
+                        portInfos.Add(new PortInfo(portName, deviceName));
+                        cmb_Paired.Invoke((MethodInvoker)delegate { cmb_Paired.Items.Add(deviceName); });
+                    }
+
+                    if (cmb_Paired.Items.Count == 0)
+                    {
+                        string[] ports = SerialPort.GetPortNames();
+                        for (int i = 0; i < ports.Length; ++i)
+                        {
+                            portInfos.Add(new PortInfo(ports[i], ""));
+                            cmb_Paired.Invoke((MethodInvoker)delegate { cmb_Paired.Items.Add(ports[i]); });
+                        }
+                    }
+
+                    cmb_Paired.Invoke((MethodInvoker)delegate
+                    {
+                        if (cmb_Paired.Items.Count == 0)
+                        {
+                            cmb_Paired.Text = "Device not found";
+                        }
+                        else
+                        {
+                            cmb_Paired.Text = "";
+                            cmb_Paired.Enabled = true;
+                        }
+                    });
+                }
+                catch { }
+            }).Start();
+        }
+
+        #endregion
+
+        public class PortInfo
+        {
+            public string portName { get; set; }
+            public string deviceName { get; set; }
+
+            public PortInfo(string portName, string deviceName)
+            {
+                this.portName = portName;
+                this.deviceName = deviceName;
+            }
+        }
+
+        private static byte[] hexToByteArray(string hex)
+        {
+            byte[] result = new byte[hex.Length / 2];
+            for (int i = 0; i < result.Length; ++i)
+            {
+                result[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
+            }
+            return result;
+        }
+
+        private void cb_Usb_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cb_Usb.Checked)
+            {
+                lbl_PairedDevices.Enabled = false;
+                cmb_Paired.Enabled = false;
+            }
+            else
+            {
+                lbl_PairedDevices.Enabled = true;
+                if (portInfos != null && portInfos.Count > 0)
+                    cmb_Paired.Enabled = true;
+            }
         }
     }
 }

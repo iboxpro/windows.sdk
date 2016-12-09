@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Example</RootNamespace>
     <AssemblyName>Example</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />
@@ -35,26 +35,17 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release-NET45|AnyCPU'">
-    <OutputPath>bin\Release-NET45\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <Optimize>false</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
   <ItemGroup>
+    <Reference Include="BBPOS_BLUETOOTH">
+      <HintPath>..\SDK\BBPOS_BLUETOOTH.dll</HintPath>
+    </Reference>
     <Reference Include="BBPOS_USB_HID">
       <HintPath>..\SDK\BBPOS_USB_HID.dll</HintPath>
     </Reference>
     <Reference Include="Cardport.Pro.SDK">
       <HintPath>..\SDK\Cardport.Pro.SDK.dll</HintPath>
     </Reference>
-    <Reference Include="DevReactor.Toolbox.SDK, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="DevReactor.Toolbox.SDK">
       <HintPath>..\SDK\DevReactor.Toolbox.SDK.dll</HintPath>
     </Reference>
     <Reference Include="emvswipeapi-pcwd-1.0.0">
@@ -63,15 +54,19 @@
     <Reference Include="iboxExternalSDK">
       <HintPath>..\SDK\iboxExternalSDK.dll</HintPath>
     </Reference>
+    <Reference Include="InTheHand.Net.Personal">
+      <HintPath>..\SDK\InTheHand.Net.Personal.dll</HintPath>
+    </Reference>
     <Reference Include="NAudio">
       <HintPath>..\SDK\NAudio.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.8.0.3\lib\net40\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -116,6 +111,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Content Include="lib\InTheHand.Net.Personal.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
