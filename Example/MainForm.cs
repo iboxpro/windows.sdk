@@ -12,8 +12,10 @@ using Ibox.Pro.SDK.External.Context;
 using System.Threading.Tasks;
 using System.Threading;
 using System.IO.Ports;
+
 using InTheHand.Net.Sockets;
 using InTheHand.Net;
+
 
 namespace Example
 {
@@ -385,8 +387,52 @@ namespace Example
                 result.TransactionItem.Amount,
                 result.TransactionItem.Date,
                 result.TransactionItem.Card != null ? result.TransactionItem.Card.PANMasked : "null",
-                result.TerminalName, result.EmvData,
-                result.RequiresSignature));
+                result.TransactionItem.TerminalName, result.TransactionItem.EMVData,
+                result.TransactionItem.RequiresSignature));
+            log(divider);
+
+
+        
+            System.Text.StringBuilder slipBuilder = new System.Text.StringBuilder();
+
+
+            slipBuilder.Append("___________SLIP___________\n");
+
+            slipBuilder.Append("ВТБ 24 (ПАО)\n");
+            slipBuilder.Append("Тестовый клиент\n");
+            slipBuilder.Append("ООО \"Тестовый клиент\"\n");
+            slipBuilder.Append("+7 916 111 2233\n");
+            slipBuilder.Append("www.testclient.com\n");
+
+            slipBuilder.AppendFormat("Дата и время операции: {0}\n", result.TransactionItem.Date);
+            slipBuilder.AppendFormat("Терминал: {0}\n", result.TransactionItem.TerminalName);
+            slipBuilder.AppendFormat("Чек: {0}\n", result.TransactionItem.Invoice);
+            slipBuilder.AppendFormat("Код подтверждения: {0}\n", result.TransactionItem.AcquirerApprovalCode);
+            slipBuilder.AppendFormat("Карта: {0} {1}\n",result.TransactionItem.Card.IIN,  result.TransactionItem.Card.PANMasked.Replace("*", " **** "));
+
+            if (result.TransactionItem.EMVData != null)
+                foreach (String key in result.TransactionItem.EMVData.Keys)
+                    slipBuilder.AppendFormat("{0}: {1}\n", key, result.TransactionItem.EMVData[key]);
+
+            slipBuilder.AppendFormat("Имя: {0}\n", result.TransactionItem.CardholderName);
+            slipBuilder.AppendFormat("Операция: {0}\n", result.TransactionItem.Operation);
+
+            slipBuilder.AppendFormat("Итого: {0} р\n", result.TransactionItem.Amount);
+            slipBuilder.Append("Комиссия: 0.00 р\n");
+            slipBuilder.Append("Статус: Успешно\n");
+
+            if (result.TransactionItem.RequiresSignature)
+            {
+                slipBuilder.Append("Подпись клиента____________________\n");
+            }
+            else
+            {
+                if (result.TransactionItem.InputType == Ibox.Pro.SDK.External.Entry.InputType.Chip)
+                    slipBuilder.Append("Подтверждено вводом PIN\n");
+            }
+
+            log(slipBuilder.ToString());
+
             log(divider);
         }
 
@@ -404,9 +450,8 @@ namespace Example
             {
                 RadioButton checkedReader = gb_Reader.Controls.OfType<RadioButton>().FirstOrDefault(btn => btn.Checked);
                 ReaderType readerType = (ReaderType)Enum.Parse(typeof(ReaderType), checkedReader.Text, true);
-
                 PortInfo selectedPort = null;
-                if (portInfos != null && portInfos.Count > 0 && cmb_Paired.SelectedIndex != -1)
+                if (!cb_Usb.Checked && portInfos != null && portInfos.Count > 0)
                     selectedPort = portInfos[cmb_Paired.SelectedIndex];
                 m_PaymentController.SetReaderType(readerType, (cb_Usb.Checked || selectedPort == null) ? null : selectedPort.portName);
             }
@@ -416,7 +461,7 @@ namespace Example
             }
 
             //DEBUG
-            //m_PaymentController.Logger = delegate (string s_log) { log(s_log, Color.Blue); };
+            m_PaymentController.Logger = delegate (string s_log) { log(s_log, Color.Blue); };
             //
 
             m_PaymentController.Enable();
@@ -618,7 +663,8 @@ namespace Example
                         else
                         {
                             cmb_Paired.Text = "";
-                            cmb_Paired.Enabled = true;
+                            if (!cb_Usb.Checked)
+                                cmb_Paired.Enabled = true;
                         }
                     });
                 }
