@@ -670,7 +670,7 @@
             this.edt_Password.Name = "edt_Password";
             this.edt_Password.Size = new System.Drawing.Size(256, 31);
             this.edt_Password.TabIndex = 2;
-            this.edt_Password.Text = "triton";
+            this.edt_Password.Text = "";
             // 
             // edt_Login
             // 
@@ -679,7 +679,7 @@
             this.edt_Login.Name = "edt_Login";
             this.edt_Login.Size = new System.Drawing.Size(256, 31);
             this.edt_Login.TabIndex = 1;
-            this.edt_Login.Text = "pf@cardport.kiev";
+            this.edt_Login.Text = "";
             // 
             // gb_History
             // 
