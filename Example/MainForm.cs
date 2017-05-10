@@ -174,6 +174,7 @@ namespace Example
                     }
                 }
                 paymentContext.PaymentProductTextDictionary = paymentProductTextData;
+
                 paymentContext.PaymentProductImageDictionary = paymentProductImageData;
             }
 
@@ -448,8 +449,13 @@ namespace Example
         {
             try
             {
-                RadioButton checkedReader = gb_Reader.Controls.OfType<RadioButton>().FirstOrDefault(btn => btn.Checked);
-                ReaderType readerType = (ReaderType)Enum.Parse(typeof(ReaderType), checkedReader.Text, true);
+                ReaderType readerType =  ReaderType.P17;
+                if (rb_Wisepad.Checked) readerType = ReaderType.P15;
+                else if (rb_Wisepad2.Checked) readerType = ReaderType.P16;
+                else if (rb_Qpos_mini.Checked) readerType = ReaderType.P17;
+
+
+
                 PortInfo selectedPort = null;
                 if (!cb_Usb.Checked && portInfos != null && portInfos.Count > 0)
                     selectedPort = portInfos[cmb_Paired.SelectedIndex];
@@ -709,6 +715,11 @@ namespace Example
                 if (portInfos != null && portInfos.Count > 0)
                     cmb_Paired.Enabled = true;
             }
+        }
+
+        private void btnCheckConnection_click(object sender, EventArgs e)
+        {
+            MessageBox.Show(PaymentController.Instance.IsConnected.ToString());
         }
     }
 }
