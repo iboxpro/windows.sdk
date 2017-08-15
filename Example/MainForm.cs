@@ -389,7 +389,7 @@ namespace Example
                 result.TransactionItem.Date,
                 result.TransactionItem.Card != null ? result.TransactionItem.Card.PANMasked : "null",
                 result.TransactionItem.TerminalName, result.TransactionItem.EMVData,
-                result.TransactionItem.RequiresSignature));
+                result.TransactionItem.SignatureRequired));
             log(divider);
 
 
@@ -422,7 +422,7 @@ namespace Example
             slipBuilder.Append("Комиссия: 0.00 р\n");
             slipBuilder.Append("Статус: Успешно\n");
 
-            if (result.TransactionItem.RequiresSignature)
+            if (result.TransactionItem.SignatureRequired)
             {
                 slipBuilder.Append("Подпись клиента____________________\n");
             }
