@@ -21,14 +21,15 @@ namespace Example
 {
     public partial class MainForm : Form
     {
-        private const string PRODUCT_CODE = "PRODUCT_TEST";
-        private const string PRODUCT_FIELD_1_CODE = "FIELD_1";
+        private const string PRODUCT_CODE = "TELE2";
+        private const string PRODUCT_FIELD_1_CODE = "PHONE_NUMBER";
         private const string PRODUCT_FIELD_2_CODE = "FIELD_2";
 
         private Font fntRegular = new Font("Courier New", 8.25F);
         private Font fntStrikeout = new Font("Courier New", 8.25F, FontStyle.Strikeout);
 
         private PaymentController m_PaymentController = PaymentController.Instance;
+        private APIAuthResult m_AuthResult;
         private List<PortInfo> portInfos = new List<PortInfo>();
         private string divider = new string('=', 93);
 
@@ -40,6 +41,7 @@ namespace Example
             m_PaymentController.SelectApplicationDelegate = onRequestSelectApplication;
             m_PaymentController.ConfirmScheduleDelegate = onRequestConfirmSchedule;
             m_PaymentController.ScheduleCreationFailedDelegate = onScheduleCreationFailed;
+            m_PaymentController.SelectInputTypeDelegate = onRequestSelectInputType;
 
             m_PaymentController.ErrorEvent += onPaymentError;
             m_PaymentController.ReaderEvent += onReaderEvent;
@@ -78,9 +80,14 @@ namespace Example
             cbl_Day.SelectedIndex = countOfDays;
         }
 
-        private void setCredentials()
+        private void checkCredentials()
         {
-            m_PaymentController.SetCredentials(edt_Login.Text, edt_Password.Text);
+            if (!edt_Login.Text.Equals(m_PaymentController.Credentials.Email) || !edt_Password.Text.Equals(m_PaymentController.Credentials.Password))
+                m_PaymentController.Credentials = new Credentials()
+                {
+                    Email = edt_Login.Text,
+                    Password = edt_Password.Text
+                };
         }
 
         private void log(string log, Color? color = null, bool strikethrough = false)
@@ -122,7 +129,7 @@ namespace Example
 
         private void startPayment()
         {
-            setCredentials();
+            checkCredentials();
 
             PaymentController.Instance.SinglestepEMV = cb_SinglestepEMV.Checked;
             bool hasProduct = cb_Product.Checked;
@@ -131,7 +138,15 @@ namespace Example
             paymentContext.Amount = decimal.Parse(edt_Amount.Text);
             paymentContext.Currency = rb_RUB.Checked ? Currency.RUB : Currency.VND;
             paymentContext.Description = edt_Description.Text;
-            paymentContext.Cash = cb_Cash.Checked;
+
+            if (rb_Card.Checked)
+                paymentContext.Method = PaymentMethod.Card;
+            else if (rb_Cash.Checked)
+                paymentContext.Method = PaymentMethod.Cash;
+            else if (rb_Credit.Checked)
+                paymentContext.Method = PaymentMethod.Credit;
+            else if (rb_Link.Checked)
+                paymentContext.Method = PaymentMethod.Other;
 
             string path = edt_ImageFilePath.Text;
             if (!string.IsNullOrEmpty(path))
@@ -155,7 +170,6 @@ namespace Example
                 paymentContext.PaymentProductCode = PRODUCT_CODE;
                 var paymentProductTextData = new Dictionary<string, string>(2);
                 paymentProductTextData.Add(PRODUCT_FIELD_1_CODE, edt_Field1.Text);
-
                 var paymentProductImageData = new Dictionary<string, byte[]>(1);
                 path = edt_Field2.Text;
                 if (!string.IsNullOrEmpty(path))
@@ -174,13 +188,14 @@ namespace Example
                     }
                 }
                 paymentContext.PaymentProductTextDictionary = paymentProductTextData;
-
                 paymentContext.PaymentProductImageDictionary = paymentProductImageData;
+
             }
 
             if (isRegular)
             {
                 RegularPaymentContext regPaymentContext = (paymentContext as RegularPaymentContext);
+
                 regPaymentContext.PaymentRepeatType = (RepeatType)cbl_RepeatType.SelectedIndex;
                 regPaymentContext.PaymentEndType = (EndType)cbl_End.SelectedIndex;
                 regPaymentContext.StartDate = dtp_StartDate.Value;
@@ -217,6 +232,38 @@ namespace Example
                 }
             }
 
+            if (paymentContext.Method != null)
+                if (m_AuthResult != null && m_AuthResult.ErrorCode == 0 && m_AuthResult.Account != null)
+                {
+                    var acquirersByMethod = m_AuthResult.Account.AcquirersByMethods;
+                    if (acquirersByMethod != null && acquirersByMethod.Count != 0)
+                    {
+                        if (acquirersByMethod.ContainsKey((PaymentMethod)paymentContext.Method))
+                        {
+                            var acquirers = acquirersByMethod[(PaymentMethod)paymentContext.Method];
+                            if (acquirers.Count == 1)
+                                paymentContext.AcquirerCode = acquirers.First().Key;
+                            else {
+                                string s_acquirers = string.Empty;
+                                for (int i = 0; i < acquirers.Count; i++)
+                                    s_acquirers += string.Format("{0}-{1} ", i, acquirers.Values.ToList()[i]);
+
+                                string strNumber = ShowDialog(s_acquirers, "Select acquirer");
+
+                                try
+                                {
+                                    int index = int.Parse(strNumber);
+                                    paymentContext.AcquirerCode = acquirers.Keys.ToList()[index];
+                                }
+                                catch (Exception)
+                                {
+
+                                }
+                            }
+                        }
+                    }
+                }
+
             try
             {
                 m_PaymentController.StartPayment(paymentContext);
@@ -228,12 +275,11 @@ namespace Example
                 log(string.Format("ERROR : {0}", e.Message));
                 return;
             }
-
         }
 
         private void reversePayment()
         {
-            setCredentials();
+            checkCredentials();
 
             try
             {
@@ -256,7 +302,7 @@ namespace Example
             log(divider);
             log("STARTING ADJUST");
 
-            setCredentials();
+            checkCredentials();
             
             Task adjustTask = Task.Factory.StartNew(() =>
             {
@@ -283,61 +329,146 @@ namespace Example
 
         private void getHistory()
         {
-            setCredentials();
-            int page = 0;
-            try
+            checkCredentials();
+            if (string.IsNullOrEmpty(edt_HistoryTrID.Text.Trim()))
             {
-                page = int.Parse(edt_HistoryPage.Text);
-            }
-            catch (FormatException ex)
-            {
-            }
-
-            log(divider);
-            log(string.Format("GET HISTORY PAGE #{0} :", page));
-
-            Task getHistoryTask = Task.Factory.StartNew(() =>
-            {
-                APIGetHistoryResult result = PaymentController.Instance.GetHistory(page);
-                if (result != null && result.ErrorCode == 0)
+                int page = 0;
+                try
                 {
-                    log(string.Format("{0,-18}  {1,-25} {2,-10} {3}", "DateTime", "Description", "Balance", "ID"));
-                    if (result.Transactions != null)
-                        foreach (Ibox.Pro.SDK.External.Entry.Transaction transaction in result.Transactions)
-                        {
-                            Color color = Color.Black;
-                            switch (transaction.DisplayMode)
-                            {
-                                case Ibox.Pro.SDK.External.Entry.DisplayMode.Success:
-                                    color = Color.Green;
-                                    break;
-                                case Ibox.Pro.SDK.External.Entry.DisplayMode.Reverse:
-                                case Ibox.Pro.SDK.External.Entry.DisplayMode.Reversed:
-                                    color = Color.SlateGray;
-                                    break;
-                                case Ibox.Pro.SDK.External.Entry.DisplayMode.Declined:
-                                    color = Color.OrangeRed;
-                                    break;
-                            }
-                            log(string.Format("{0,-17:dd.MM.yyyy hh:mm}   {1,-25} {2,-10} {3}", 
-                                transaction.Date, transaction.Description, string.Format(transaction.AmountFormat, transaction.Balance), transaction.ID),
-                                color, !transaction.Canceled);
-                        }
+                    page = int.Parse(edt_HistoryPage.Text);
                 }
-                else
+                catch (FormatException ex)
                 {
-                    log(string.Format("GET HISTORY ERROR : {0}({1})", (result == null ? "null" : result.ErrorMessage), (result == null ? "null" : result.ErrorCode.ToString())));
                 }
 
                 log(divider);
-            });                   
+                log(string.Format("GET HISTORY PAGE #{0} :", page));
+
+                Task getHistoryTask = Task.Factory.StartNew(() =>
+                {
+                    APIGetHistoryResult result = PaymentController.Instance.GetHistory(page);
+                    if (result != null && result.ErrorCode == 0)
+                    {
+                        log(string.Format("{0,-18}  {1,-25} {2,-10} {3}", "DateTime", "Description", "Balance", "ID"));
+                        if (result.Transactions != null)
+                            foreach (Ibox.Pro.SDK.External.Entry.Transaction transaction in result.Transactions)
+                            {
+                                Color color = Color.Black;
+                                switch (transaction.DisplayMode)
+                                {
+                                    case Ibox.Pro.SDK.External.Entry.DisplayMode.Success:
+                                        color = Color.Green;
+                                        break;
+                                    case Ibox.Pro.SDK.External.Entry.DisplayMode.Reverse:
+                                    case Ibox.Pro.SDK.External.Entry.DisplayMode.Reversed:
+                                        color = Color.SlateGray;
+                                        break;
+                                    case Ibox.Pro.SDK.External.Entry.DisplayMode.Declined:
+                                        color = Color.OrangeRed;
+                                        break;
+                                }
+                                log(string.Format("{0,-17:dd.MM.yyyy hh:mm}   {1,-25} {2,-10} {3}",
+                                    transaction.Date, transaction.Description, string.Format(transaction.AmountFormat, transaction.Balance), transaction.ID),
+                                    color, !transaction.Canceled);
+                            }
+                    }
+                    else
+                    {
+                        log(string.Format("GET HISTORY ERROR : {0}({1})", (result == null ? "null" : result.ErrorMessage), (result == null ? "null" : result.ErrorCode.ToString())));
+                    }
+
+                    log(divider);
+                });
+            }
+            else
+            {
+                string transactionID = edt_HistoryTrID.Text.Trim();
+                log(divider);
+                log(string.Format("GET TRANSACTION BY ID : {0}", transactionID));
+
+                Task getHistoryTask = Task.Factory.StartNew(() =>
+                {
+                    APIGetHistoryResult result = PaymentController.Instance.GetTransactionByID(transactionID);
+                    if (result != null && result.ErrorCode == 0)
+                    {
+                        if (result.Transactions != null && result.Transactions.Count == 1)
+                            log(Newtonsoft.Json.JsonConvert.SerializeObject(result.Transactions[0], Newtonsoft.Json.Formatting.Indented));
+                        else
+                            log("Transaction not found or not unique");
+                    }
+                    else
+                    {
+                        log(string.Format("GET TRANSACTION BY ID ERROR : {0}({1})", (result == null ? "null" : result.ErrorMessage), (result == null ? "null" : result.ErrorCode.ToString())));
+                    }
+
+                    log(divider);
+                });
+            }
+        }
+
+        private void auth()
+        {
+            checkCredentials();
+            log(divider);
+            log("AUTH");
+
+            Task authTask = Task.Factory.StartNew(() =>
+            {
+                var result = PaymentController.Instance.Auth();
+                m_AuthResult = result;
+                if (result != null && result.ErrorCode == 0)
+                {
+                    log(Newtonsoft.Json.JsonConvert.SerializeObject(result.Account, Newtonsoft.Json.Formatting.Indented));
+                }
+                else
+                {
+                    log(string.Format("AUTH ERROR : {0}({1})", (result == null ? "null" : result.ErrorMessage), (result == null ? "null" : result.ErrorCode.ToString())));
+                }
+                log(divider);
+            });
+        }
+
+        private static string ShowDialog(string text, string caption)
+        {
+            Form prompt = new Form()
+            {
+                Width = 500,
+                Height = 150,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                Text = caption,
+                StartPosition = FormStartPosition.CenterScreen
+            };
+            Label textLabel = new Label() { Left = 50, Top = 20, Text = text };
+            TextBox textBox = new TextBox() { Left = 50, Top = 50, Width = 400 };
+            Button confirmation = new Button() { Text = "Ok", Left = 350, Width = 100, Top = 70, DialogResult = DialogResult.OK };
+            confirmation.Click += (sender, e) => { prompt.Close(); };
+            prompt.Controls.Add(textBox);
+            prompt.Controls.Add(confirmation);
+            prompt.Controls.Add(textLabel);
+            prompt.AcceptButton = confirmation;
+
+            return prompt.ShowDialog() == DialogResult.OK ? textBox.Text : "";
         }
 
         private int onRequestSelectApplication(List<string> apps)
         {
             log("REQUEST SELECT APP");
             log(string.Join(Environment.NewLine, apps));
-            return 1;
+
+            String strApps = string.Empty;
+            for (int i = 0; i < apps.Count; i++)
+                strApps += string.Format("{0}-{1} ", i, apps[i]);
+
+            string strNumber = ShowDialog(strApps, "Select application");
+
+            try
+            {
+                return int.Parse(strNumber);
+            }
+            catch (Exception ex)
+            {
+                return 0;
+            }
         }
 
         private bool onRequestConfirmSchedule(List<KeyValuePair<DateTime, decimal>> steps, decimal totalAmount)
@@ -352,6 +483,27 @@ namespace Example
         {
             log(String.Format("PAYMENT CREATION FAILED : {0}({1})", error, description ?? ""));
             return MessageBox.Show("Payment creation failed. Retry?", "Payment creation failed", MessageBoxButtons.YesNo) == DialogResult.Yes;
+        }
+        
+        private Ibox.Pro.SDK.External.Entry.InputType onRequestSelectInputType(List<Ibox.Pro.SDK.External.Entry.InputType> allowedInputTypes)
+        {
+            log("REQUEST SELECT INPUT TYPE");
+            log(string.Join(Environment.NewLine, allowedInputTypes.Select(it => it.ToString())));
+
+            var inputTypes = string.Empty;
+            for (int i = 0; i < allowedInputTypes.Count; i++)
+                inputTypes += string.Format("{0}-{1} ", i, allowedInputTypes[i].ToString());
+
+            string strNumber = ShowDialog(inputTypes, "Select input type");
+
+            try
+            {
+                return allowedInputTypes[int.Parse(strNumber)];
+            }
+            catch (Exception ex)
+            {
+                return allowedInputTypes[0];
+            }
         }
 
         #region PaymentController events    
@@ -372,79 +524,85 @@ namespace Example
 
         private void onPaymentFinished(PaymentResultContext result)
         {
-            log(string.Format("PAYMENT FINISHED : " + Environment.NewLine
-                + " ID : {0}" + Environment.NewLine
-                + " Invoice : {1}" + Environment.NewLine
-                + " ApprovalCode : {2}" + Environment.NewLine
-                + " Amount : {3}" + Environment.NewLine
-                + " DateTime : {4}" + Environment.NewLine
-                + " PAN : {5}" + Environment.NewLine
-                + " Terminal : {6}" + Environment.NewLine
-                + " EMVdata : {7}" + Environment.NewLine
-                + " RequiresSignature : {8}",
-                result.TransactionItem.ID,
-                result.TransactionItem.Invoice,
-                result.TransactionItem.AcquirerApprovalCode,
-                result.TransactionItem.Amount,
-                result.TransactionItem.Date,
-                result.TransactionItem.Card != null ? result.TransactionItem.Card.PANMasked : "null",
-                result.TransactionItem.TerminalName, result.TransactionItem.EMVData,
-                result.TransactionItem.SignatureRequired));
-            log(divider);
-
-
-        
-            System.Text.StringBuilder slipBuilder = new System.Text.StringBuilder();
-
-
-            slipBuilder.Append("___________SLIP___________\n");
-
-            slipBuilder.Append("ВТБ 24 (ПАО)\n");
-            slipBuilder.Append("Тестовый клиент\n");
-            slipBuilder.Append("ООО \"Тестовый клиент\"\n");
-            slipBuilder.Append("+7 916 111 2233\n");
-            slipBuilder.Append("www.testclient.com\n");
-
-            slipBuilder.AppendFormat("Дата и время операции: {0}\n", result.TransactionItem.Date);
-            slipBuilder.AppendFormat("Терминал: {0}\n", result.TransactionItem.TerminalName);
-            slipBuilder.AppendFormat("Чек: {0}\n", result.TransactionItem.Invoice);
-            slipBuilder.AppendFormat("Код подтверждения: {0}\n", result.TransactionItem.AcquirerApprovalCode);
-            slipBuilder.AppendFormat("Карта: {0} {1}\n",result.TransactionItem.Card.IIN,  result.TransactionItem.Card.PANMasked.Replace("*", " **** "));
-
-            if (result.TransactionItem.EMVData != null)
-                foreach (String key in result.TransactionItem.EMVData.Keys)
-                    slipBuilder.AppendFormat("{0}: {1}\n", key, result.TransactionItem.EMVData[key]);
-
-            slipBuilder.AppendFormat("Имя: {0}\n", result.TransactionItem.CardholderName);
-            slipBuilder.AppendFormat("Операция: {0}\n", result.TransactionItem.Operation);
-
-            slipBuilder.AppendFormat("Итого: {0} р\n", result.TransactionItem.Amount);
-            slipBuilder.Append("Комиссия: 0.00 р\n");
-            slipBuilder.Append("Статус: Успешно\n");
-
-            if (result.TransactionItem.SignatureRequired)
+            try
             {
-                slipBuilder.Append("Подпись клиента____________________\n");
+                log(string.Format("PAYMENT FINISHED : " + Environment.NewLine
+                    + " ID : {0}" + Environment.NewLine
+                    + " Invoice : {1}" + Environment.NewLine
+                    + " ApprovalCode : {2}" + Environment.NewLine
+                    + " Amount : {3}" + Environment.NewLine
+                    + " DateTime : {4}" + Environment.NewLine
+                    + " PAN : {5}" + Environment.NewLine
+                    + " Terminal : {6}" + Environment.NewLine
+                    + " EMVdata : {7}" + Environment.NewLine
+                    + " Link data : {8}" + Environment.NewLine
+                    + " SignatureRequired (tran) : {9}" + Environment.NewLine
+                    + " SignatureRequired : {10}",
+                    result.TransactionItem.ID,
+                    result.TransactionItem.Invoice,
+                    result.TransactionItem.AcquirerApprovalCode,
+                    result.TransactionItem.Amount,
+                    result.TransactionItem.Date,
+                    result.TransactionItem.Card != null ? result.TransactionItem.Card.PANMasked : "null",
+                    result.TransactionItem.TerminalName, result.TransactionItem.EMVData,
+                    Newtonsoft.Json.JsonConvert.SerializeObject(result.TransactionItem.ExternalPayment, Newtonsoft.Json.Formatting.Indented),
+                    result.TransactionItem.SignatureRequired,
+                    result.RequiresSignature.Value));
+                log(divider);
+                                
+                System.Text.StringBuilder slipBuilder = new System.Text.StringBuilder();
+                slipBuilder.Append("___________SLIP___________\n");
+
+                slipBuilder.Append("ВТБ 24 (ПАО)\n");
+                slipBuilder.Append("Тестовый клиент\n");
+                slipBuilder.Append("ООО \"Тестовый клиент\"\n");
+                slipBuilder.Append("+7 916 111 2233\n");
+                slipBuilder.Append("www.testclient.com\n");
+
+                slipBuilder.AppendFormat("Дата и время операции: {0}\n", result.TransactionItem.Date);
+                slipBuilder.AppendFormat("Терминал: {0}\n", result.TransactionItem.TerminalName);
+                slipBuilder.AppendFormat("Чек: {0}\n", result.TransactionItem.Invoice);
+                slipBuilder.AppendFormat("Код подтверждения: {0}\n", result.TransactionItem.AcquirerApprovalCode);
+                slipBuilder.AppendFormat("Карта: {0} {1}\n", result.TransactionItem.Card.IIN, result.TransactionItem.Card.PANMasked.Replace("*", " **** "));
+
+                if (result.TransactionItem.EMVData != null)
+                    foreach (String key in result.TransactionItem.EMVData.Keys)
+                        slipBuilder.AppendFormat("{0}: {1}\n", key, result.TransactionItem.EMVData[key]);
+
+                slipBuilder.AppendFormat("Имя: {0}\n", result.TransactionItem.CardholderName);
+                slipBuilder.AppendFormat("Операция: {0}\n", result.TransactionItem.Operation);
+
+                slipBuilder.AppendFormat("Итого: {0} р\n", result.TransactionItem.Amount);
+                slipBuilder.Append("Комиссия: 0.00 р\n");
+                slipBuilder.Append("Статус: Успешно\n");
+
+
+                if (result.TransactionItem.SignatureRequired)
+                {
+                    slipBuilder.Append("Подпись клиента____________________\n");
+                }
+                else
+                {
+                    if (result.TransactionItem.InputType == Ibox.Pro.SDK.External.Entry.InputType.Chip || result.TransactionItem.InputType == Ibox.Pro.SDK.External.Entry.InputType.NFC)
+                        slipBuilder.Append("Подтверждено вводом PIN\n");
+                }
+
+                log(slipBuilder.ToString());
+
+                log(divider);
             }
-            else
+            catch (Exception ex)
             {
-                if (result.TransactionItem.InputType == Ibox.Pro.SDK.External.Entry.InputType.Chip)
-                    slipBuilder.Append("Подтверждено вводом PIN\n");
             }
-
-            log(slipBuilder.ToString());
-
-            log(divider);
         }
 
         private void onReverseEvent(ReverseEvent reverseEvent, string message)
         {
             log(string.Format("REVERSE : {0}", message));
-        }
-
+        }    
         #endregion
 
-        #region UI actions        
+        #region UI actions
         private void btn_Start_Click(object sender, EventArgs e)
         {
             try
@@ -453,9 +611,7 @@ namespace Example
                 if (rb_Wisepad.Checked) readerType = ReaderType.P15;
                 else if (rb_Wisepad2.Checked) readerType = ReaderType.P16;
                 else if (rb_Qpos_mini.Checked) readerType = ReaderType.P17;
-
-
-
+                
                 PortInfo selectedPort = null;
                 if (!cb_Usb.Checked && portInfos != null && portInfos.Count > 0)
                     selectedPort = portInfos[cmb_Paired.SelectedIndex];
@@ -576,6 +732,21 @@ namespace Example
             lbl_EndDate.Enabled = endType == EndType.AtDay;
         }
 
+        private void cb_Usb_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cb_Usb.Checked)
+            {
+                lbl_PairedDevices.Enabled = false;
+                cmb_Paired.Enabled = false;
+            }
+            else
+            {
+                lbl_PairedDevices.Enabled = true;
+                if (portInfos != null && portInfos.Count > 0)
+                    cmb_Paired.Enabled = true;
+            }
+        }
+
         private void btn_Adjust_Click(object sender, EventArgs e)
         {
             adjustPayment();
@@ -596,9 +767,19 @@ namespace Example
             m_PaymentController.Disable();
         }
 
-        private void btnCancel_Click(object sender, EventArgs e)
+        private void btn_Cancel_Click(object sender, EventArgs e)
         {
             m_PaymentController.CancelPayment();
+        }
+
+        private void btn_CheckConnection_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show(PaymentController.Instance.IsConnected.ToString());
+        }
+
+        private void btn_Auth_Click(object sender, EventArgs e)
+        {
+            auth();
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -622,7 +803,8 @@ namespace Example
                         string portName = ManObj["DeviceID"].ToString();
                         string pnpDeviceID = ManObj["PNPDeviceID"].ToString();
 
-                        Console.WriteLine(portName + " " + pnpDeviceID);
+
+                        //Console.WriteLine(portName + " " + pnpDeviceID);
 
                         string macAddress;
 
@@ -700,26 +882,6 @@ namespace Example
                 result[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
             }
             return result;
-        }
-
-        private void cb_Usb_CheckedChanged(object sender, EventArgs e)
-        {
-            if (cb_Usb.Checked)
-            {
-                lbl_PairedDevices.Enabled = false;
-                cmb_Paired.Enabled = false;
-            }
-            else
-            {
-                lbl_PairedDevices.Enabled = true;
-                if (portInfos != null && portInfos.Count > 0)
-                    cmb_Paired.Enabled = true;
-            }
-        }
-
-        private void btnCheckConnection_click(object sender, EventArgs e)
-        {
-            MessageBox.Show(PaymentController.Instance.IsConnected.ToString());
         }
     }
 }
