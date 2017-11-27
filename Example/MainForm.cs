@@ -15,7 +15,7 @@ using System.IO.Ports;
 
 using InTheHand.Net.Sockets;
 using InTheHand.Net;
-
+using Ibox.Pro.SDK.External.Entry;
 
 namespace Example
 {
@@ -37,7 +37,7 @@ namespace Example
         {
             InitializeComponent();
             initControls();
-
+            m_PaymentController.ClientProductCode = "SHARP_SDK_EXAMPLE";
             m_PaymentController.SelectApplicationDelegate = onRequestSelectApplication;
             m_PaymentController.ConfirmScheduleDelegate = onRequestConfirmSchedule;
             m_PaymentController.ScheduleCreationFailedDelegate = onScheduleCreationFailed;
@@ -138,6 +138,8 @@ namespace Example
             paymentContext.Amount = decimal.Parse(edt_Amount.Text);
             paymentContext.Currency = rb_RUB.Checked ? Currency.RUB : Currency.VND;
             paymentContext.Description = edt_Description.Text;
+            paymentContext.ReceiptEmail = "test@test.email";
+            paymentContext.ReceiptPhone = "+71234567891";
 
             if (rb_Card.Checked)
                 paymentContext.Method = PaymentMethod.Card;
@@ -286,7 +288,9 @@ namespace Example
                 String trID = edt_ReverseID.Text;
                 ReverseMode mode = rb_Cancel.Checked ? ReverseMode.Cancel : ReverseMode.Return;
                 decimal? amountToReverse = string.IsNullOrEmpty(edt_ReverseAmount.Text) ? null : (decimal?)decimal.Parse(edt_ReverseAmount.Text);
-                m_PaymentController.StartReverse(trID, mode, amountToReverse);
+                string receiptEmail = "test@test.email";
+                string receiptPhone = "+71234567891";
+                m_PaymentController.StartReverse(trID, mode, amountToReverse, receiptEmail, receiptPhone);
                 log(divider);
                 log(string.Format("{0} PAYMENT : {1}{2}", mode == ReverseMode.Cancel ? "CANCEL" : "RETURN", Environment.NewLine, trID));
             }
@@ -349,26 +353,34 @@ namespace Example
                     APIGetHistoryResult result = PaymentController.Instance.GetHistory(page);
                     if (result != null && result.ErrorCode == 0)
                     {
-                        log(string.Format("{0,-18}  {1,-25} {2,-10} {3}", "DateTime", "Description", "Balance", "ID"));
+                        List<Transaction> transactions = new List<Transaction>();
+                        if (result.InProcessTransactions != null)
+                            transactions.AddRange(result.InProcessTransactions);
                         if (result.Transactions != null)
-                            foreach (Ibox.Pro.SDK.External.Entry.Transaction transaction in result.Transactions)
+                            transactions.AddRange(result.Transactions);
+                        log(string.Format("{0,-18}  {1,-25} {2,-10} {3}", "DateTime", "Description", "Balance", "ID"));
+                        if (transactions != null)
+                            foreach (Transaction transaction in transactions)
                             {
                                 Color color = Color.Black;
                                 switch (transaction.DisplayMode)
                                 {
-                                    case Ibox.Pro.SDK.External.Entry.DisplayMode.Success:
+                                    case DisplayMode.Success:
                                         color = Color.Green;
                                         break;
-                                    case Ibox.Pro.SDK.External.Entry.DisplayMode.Reverse:
-                                    case Ibox.Pro.SDK.External.Entry.DisplayMode.Reversed:
+                                    case DisplayMode.Reverse:
+                                    case DisplayMode.Reversed:
                                         color = Color.SlateGray;
                                         break;
-                                    case Ibox.Pro.SDK.External.Entry.DisplayMode.Declined:
+                                    case DisplayMode.Declined:
                                         color = Color.OrangeRed;
                                         break;
                                 }
+                                string description = transaction.Description;
+                                if (result.InProcessTransactions != null && result.InProcessTransactions.Contains(transaction))
+                                    description += "    (IN PROCESS)";
                                 log(string.Format("{0,-17:dd.MM.yyyy hh:mm}   {1,-25} {2,-10} {3}",
-                                    transaction.Date, transaction.Description, string.Format(transaction.AmountFormat, transaction.Balance), transaction.ID),
+                                    transaction.Date, description, string.Format(transaction.AmountFormat, transaction.Balance), transaction.ID),
                                     color, !transaction.Canceled);
                             }
                     }
@@ -391,8 +403,13 @@ namespace Example
                     APIGetHistoryResult result = PaymentController.Instance.GetTransactionByID(transactionID);
                     if (result != null && result.ErrorCode == 0)
                     {
-                        if (result.Transactions != null && result.Transactions.Count == 1)
-                            log(Newtonsoft.Json.JsonConvert.SerializeObject(result.Transactions[0], Newtonsoft.Json.Formatting.Indented));
+                        List<Transaction> transactions = new List<Transaction>();
+                        if (result.InProcessTransactions != null)
+                            transactions.AddRange(result.InProcessTransactions);
+                        if (result.Transactions != null)
+                            transactions.AddRange(result.Transactions);
+                        if (transactions != null && transactions.Count == 1)
+                            log(Newtonsoft.Json.JsonConvert.SerializeObject(transactions[0], Newtonsoft.Json.Formatting.Indented));
                         else
                             log("Transaction not found or not unique");
                     }
@@ -400,7 +417,7 @@ namespace Example
                     {
                         log(string.Format("GET TRANSACTION BY ID ERROR : {0}({1})", (result == null ? "null" : result.ErrorMessage), (result == null ? "null" : result.ErrorCode.ToString())));
                     }
-
+                    
                     log(divider);
                 });
             }
@@ -526,6 +543,12 @@ namespace Example
         {
             try
             {
+
+                string emvdata = string.Empty;
+                if (result.TransactionItem.EMVData != null)
+                    foreach (String key in result.TransactionItem.EMVData.Keys)
+                        emvdata += string.Format ("{0}: {1}\n", key, result.TransactionItem.EMVData[key]);
+
                 log(string.Format("PAYMENT FINISHED : " + Environment.NewLine
                     + " ID : {0}" + Environment.NewLine
                     + " Invoice : {1}" + Environment.NewLine
@@ -544,7 +567,7 @@ namespace Example
                     result.TransactionItem.Amount,
                     result.TransactionItem.Date,
                     result.TransactionItem.Card != null ? result.TransactionItem.Card.PANMasked : "null",
-                    result.TransactionItem.TerminalName, result.TransactionItem.EMVData,
+                    result.TransactionItem.TerminalName, emvdata,
                     Newtonsoft.Json.JsonConvert.SerializeObject(result.TransactionItem.ExternalPayment, Newtonsoft.Json.Formatting.Indented),
                     result.TransactionItem.SignatureRequired,
                     result.RequiresSignature.Value));
@@ -552,13 +575,13 @@ namespace Example
                                 
                 System.Text.StringBuilder slipBuilder = new System.Text.StringBuilder();
                 slipBuilder.Append("___________SLIP___________\n");
-
-                slipBuilder.Append("ВТБ 24 (ПАО)\n");
-                slipBuilder.Append("Тестовый клиент\n");
-                slipBuilder.Append("ООО \"Тестовый клиент\"\n");
-                slipBuilder.Append("+7 916 111 2233\n");
-                slipBuilder.Append("www.testclient.com\n");
-
+                if (m_AuthResult != null && m_AuthResult.ErrorCode == 0) { 
+                    slipBuilder.AppendLine(m_AuthResult.Account.BankName);
+                    slipBuilder.AppendLine(m_AuthResult.Account.ClientName);
+                    slipBuilder.AppendLine(m_AuthResult.Account.ClientLegalName);
+                    slipBuilder.AppendLine(m_AuthResult.Account.ClientPhone);
+                    slipBuilder.AppendLine(m_AuthResult.Account.ClientWeb);
+                }
                 slipBuilder.AppendFormat("Дата и время операции: {0}\n", result.TransactionItem.Date);
                 slipBuilder.AppendFormat("Терминал: {0}\n", result.TransactionItem.TerminalName);
                 slipBuilder.AppendFormat("Чек: {0}\n", result.TransactionItem.Invoice);

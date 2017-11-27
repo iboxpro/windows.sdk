@@ -44,6 +44,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\SDK\Cardport.Pro.SDK.dll</HintPath>
     </Reference>
+    <Reference Include="CryptoGraphy, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\SDK\CryptoGraphy.dll</HintPath>
+    </Reference>
     <Reference Include="DevReactor.Toolbox.SDK, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\SDK\DevReactor.Toolbox.SDK.dll</HintPath>
@@ -118,9 +122,6 @@
     </None>
   </ItemGroup>
   <ItemGroup />
-  <ItemGroup>
-    <Content Include="lib\InTheHand.Net.Personal.dll" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
