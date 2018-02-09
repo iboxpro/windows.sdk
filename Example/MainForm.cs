@@ -42,6 +42,7 @@ namespace Example
             m_PaymentController.ConfirmScheduleDelegate = onRequestConfirmSchedule;
             m_PaymentController.ScheduleCreationFailedDelegate = onScheduleCreationFailed;
             m_PaymentController.SelectInputTypeDelegate = onRequestSelectInputType;
+            m_PaymentController.CancellationTimeoutDelegate = onCancellationTimeout;
 
             m_PaymentController.ErrorEvent += onPaymentError;
             m_PaymentController.ReaderEvent += onReaderEvent;
@@ -502,7 +503,7 @@ namespace Example
             return MessageBox.Show("Payment creation failed. Retry?", "Payment creation failed", MessageBoxButtons.YesNo) == DialogResult.Yes;
         }
         
-        private Ibox.Pro.SDK.External.Entry.InputType onRequestSelectInputType(List<Ibox.Pro.SDK.External.Entry.InputType> allowedInputTypes)
+        private InputType onRequestSelectInputType(List<InputType> allowedInputTypes)
         {
             log("REQUEST SELECT INPUT TYPE");
             log(string.Join(Environment.NewLine, allowedInputTypes.Select(it => it.ToString())));
@@ -521,6 +522,12 @@ namespace Example
             {
                 return allowedInputTypes[0];
             }
+        }
+
+        private bool onCancellationTimeout()
+        {
+            log(String.Format("CANCELLATION TIMEOUT"));
+            return MessageBox.Show("Cancellation not available. Perform refund?", "Cancellation failed", MessageBoxButtons.YesNo) == DialogResult.Yes;
         }
 
         #region PaymentController events    
@@ -908,3 +915,4 @@ namespace Example
         }
     }
 }
+ 
