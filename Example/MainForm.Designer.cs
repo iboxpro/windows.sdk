@@ -118,10 +118,14 @@
             this.btn_CheckConnection = new System.Windows.Forms.Button();
             this.btn_Auth = new System.Windows.Forms.Button();
             this.gb_Input = new System.Windows.Forms.GroupBox();
+            this.rb_LinkedCard = new System.Windows.Forms.RadioButton();
+            this.rb_Outer = new System.Windows.Forms.RadioButton();
             this.rb_Link = new System.Windows.Forms.RadioButton();
             this.rb_Cash = new System.Windows.Forms.RadioButton();
             this.rb_Credit = new System.Windows.Forms.RadioButton();
             this.rb_Card = new System.Windows.Forms.RadioButton();
+            this.btn_Attach = new System.Windows.Forms.Button();
+            this.btn_Remove = new System.Windows.Forms.Button();
             this.gb_Regular.SuspendLayout();
             this.gb_Adjust.SuspendLayout();
             this.gb_History.SuspendLayout();
@@ -199,9 +203,9 @@
             // 
             // btn_ClearLog
             // 
-            this.btn_ClearLog.Location = new System.Drawing.Point(11, 739);
+            this.btn_ClearLog.Location = new System.Drawing.Point(275, 739);
             this.btn_ClearLog.Name = "btn_ClearLog";
-            this.btn_ClearLog.Size = new System.Drawing.Size(522, 30);
+            this.btn_ClearLog.Size = new System.Drawing.Size(258, 40);
             this.btn_ClearLog.TabIndex = 35;
             this.btn_ClearLog.Text = "Clear log";
             this.btn_ClearLog.UseVisualStyleBackColor = true;
@@ -210,7 +214,7 @@
             // cb_Regular
             // 
             this.cb_Regular.AutoSize = true;
-            this.cb_Regular.Location = new System.Drawing.Point(284, 263);
+            this.cb_Regular.Location = new System.Drawing.Point(415, 285);
             this.cb_Regular.Name = "cb_Regular";
             this.cb_Regular.Size = new System.Drawing.Size(106, 17);
             this.cb_Regular.TabIndex = 23;
@@ -503,7 +507,7 @@
             this.gb_Adjust.Controls.Add(this.edt_AdjustEmail);
             this.gb_Adjust.Controls.Add(this.lbl_AdjustPhone);
             this.gb_Adjust.Controls.Add(this.lbl_AdjustEmail);
-            this.gb_Adjust.Location = new System.Drawing.Point(275, 405);
+            this.gb_Adjust.Location = new System.Drawing.Point(275, 416);
             this.gb_Adjust.Name = "gb_Adjust";
             this.gb_Adjust.Size = new System.Drawing.Size(258, 170);
             this.gb_Adjust.TabIndex = 27;
@@ -565,7 +569,6 @@
             this.edt_AdjustPhone.Name = "edt_AdjustPhone";
             this.edt_AdjustPhone.Size = new System.Drawing.Size(121, 20);
             this.edt_AdjustPhone.TabIndex = 8;
-            this.edt_AdjustPhone.Text = "0123456789";
             // 
             // edt_AdjustEmail
             // 
@@ -594,7 +597,7 @@
             // 
             // btn_Adjust
             // 
-            this.btn_Adjust.Location = new System.Drawing.Point(275, 581);
+            this.btn_Adjust.Location = new System.Drawing.Point(275, 592);
             this.btn_Adjust.Name = "btn_Adjust";
             this.btn_Adjust.Size = new System.Drawing.Size(258, 30);
             this.btn_Adjust.TabIndex = 28;
@@ -640,9 +643,9 @@
             this.gb_History.Controls.Add(this.label1);
             this.gb_History.Controls.Add(this.edt_HistoryPage);
             this.gb_History.Controls.Add(this.lbl_HistoryPage);
-            this.gb_History.Location = new System.Drawing.Point(275, 617);
+            this.gb_History.Location = new System.Drawing.Point(278, 628);
             this.gb_History.Name = "gb_History";
-            this.gb_History.Size = new System.Drawing.Size(258, 80);
+            this.gb_History.Size = new System.Drawing.Size(258, 69);
             this.gb_History.TabIndex = 29;
             this.gb_History.TabStop = false;
             this.gb_History.Text = "History";
@@ -695,7 +698,7 @@
             // cb_Product
             // 
             this.cb_Product.AutoSize = true;
-            this.cb_Product.Location = new System.Drawing.Point(284, 286);
+            this.cb_Product.Location = new System.Drawing.Point(415, 308);
             this.cb_Product.Name = "cb_Product";
             this.cb_Product.Size = new System.Drawing.Size(127, 17);
             this.cb_Product.TabIndex = 24;
@@ -709,7 +712,7 @@
             this.gb_Product.Controls.Add(this.edt_Field1);
             this.gb_Product.Controls.Add(this.lbl_Field2);
             this.gb_Product.Controls.Add(this.lbl_Field1);
-            this.gb_Product.Location = new System.Drawing.Point(275, 331);
+            this.gb_Product.Location = new System.Drawing.Point(275, 337);
             this.gb_Product.Name = "gb_Product";
             this.gb_Product.Size = new System.Drawing.Size(258, 73);
             this.gb_Product.TabIndex = 26;
@@ -778,7 +781,7 @@
             // 
             this.btn_Reverse.Location = new System.Drawing.Point(11, 677);
             this.btn_Reverse.Name = "btn_Reverse";
-            this.btn_Reverse.Size = new System.Drawing.Size(261, 56);
+            this.btn_Reverse.Size = new System.Drawing.Size(261, 30);
             this.btn_Reverse.TabIndex = 15;
             this.btn_Reverse.Text = "Reverse Payment";
             this.btn_Reverse.UseVisualStyleBackColor = true;
@@ -860,7 +863,7 @@
             this.gb_Currency.Controls.Add(this.rb_RUB);
             this.gb_Currency.Location = new System.Drawing.Point(406, 212);
             this.gb_Currency.Name = "gb_Currency";
-            this.gb_Currency.Size = new System.Drawing.Size(127, 114);
+            this.gb_Currency.Size = new System.Drawing.Size(127, 67);
             this.gb_Currency.TabIndex = 22;
             this.gb_Currency.TabStop = false;
             this.gb_Currency.Text = "Currency";
@@ -901,7 +904,7 @@
             // cb_SinglestepEMV
             // 
             this.cb_SinglestepEMV.AutoSize = true;
-            this.cb_SinglestepEMV.Location = new System.Drawing.Point(284, 309);
+            this.cb_SinglestepEMV.Location = new System.Drawing.Point(284, 308);
             this.cb_SinglestepEMV.Name = "cb_SinglestepEMV";
             this.cb_SinglestepEMV.Size = new System.Drawing.Size(101, 17);
             this.cb_SinglestepEMV.TabIndex = 25;
@@ -920,7 +923,7 @@
             this.edt_Log.Name = "edt_Log";
             this.edt_Log.ReadOnly = true;
             this.edt_Log.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
-            this.edt_Log.Size = new System.Drawing.Size(698, 756);
+            this.edt_Log.Size = new System.Drawing.Size(698, 766);
             this.edt_Log.TabIndex = 36;
             this.edt_Log.Text = "";
             // 
@@ -1012,21 +1015,43 @@
             // 
             // gb_Input
             // 
+            this.gb_Input.Controls.Add(this.rb_LinkedCard);
+            this.gb_Input.Controls.Add(this.rb_Outer);
             this.gb_Input.Controls.Add(this.rb_Link);
             this.gb_Input.Controls.Add(this.rb_Cash);
             this.gb_Input.Controls.Add(this.rb_Credit);
             this.gb_Input.Controls.Add(this.rb_Card);
             this.gb_Input.Location = new System.Drawing.Point(275, 151);
             this.gb_Input.Name = "gb_Input";
-            this.gb_Input.Size = new System.Drawing.Size(122, 106);
+            this.gb_Input.Size = new System.Drawing.Size(122, 151);
             this.gb_Input.TabIndex = 21;
             this.gb_Input.TabStop = false;
             this.gb_Input.Text = "Payment method";
             // 
+            // rb_LinkedCard
+            // 
+            this.rb_LinkedCard.AutoSize = true;
+            this.rb_LinkedCard.Location = new System.Drawing.Point(9, 128);
+            this.rb_LinkedCard.Name = "rb_LinkedCard";
+            this.rb_LinkedCard.Size = new System.Drawing.Size(81, 17);
+            this.rb_LinkedCard.TabIndex = 5;
+            this.rb_LinkedCard.Text = "Linked card";
+            this.rb_LinkedCard.UseVisualStyleBackColor = true;
+            // 
+            // rb_Outer
+            // 
+            this.rb_Outer.AutoSize = true;
+            this.rb_Outer.Location = new System.Drawing.Point(9, 105);
+            this.rb_Outer.Name = "rb_Outer";
+            this.rb_Outer.Size = new System.Drawing.Size(75, 17);
+            this.rb_Outer.TabIndex = 4;
+            this.rb_Outer.Text = "Outer card";
+            this.rb_Outer.UseVisualStyleBackColor = true;
+            // 
             // rb_Link
             // 
             this.rb_Link.AutoSize = true;
-            this.rb_Link.Location = new System.Drawing.Point(8, 82);
+            this.rb_Link.Location = new System.Drawing.Point(9, 82);
             this.rb_Link.Name = "rb_Link";
             this.rb_Link.Size = new System.Drawing.Size(56, 17);
             this.rb_Link.TabIndex = 3;
@@ -1065,11 +1090,33 @@
             this.rb_Card.Text = "Card";
             this.rb_Card.UseVisualStyleBackColor = true;
             // 
+            // btn_Attach
+            // 
+            this.btn_Attach.Location = new System.Drawing.Point(12, 713);
+            this.btn_Attach.Name = "btn_Attach";
+            this.btn_Attach.Size = new System.Drawing.Size(261, 30);
+            this.btn_Attach.TabIndex = 37;
+            this.btn_Attach.Text = "Attach card";
+            this.btn_Attach.UseVisualStyleBackColor = true;
+            this.btn_Attach.Click += new System.EventHandler(this.btn_Attach_Click);
+            // 
+            // btn_Remove
+            // 
+            this.btn_Remove.Location = new System.Drawing.Point(12, 749);
+            this.btn_Remove.Name = "btn_Remove";
+            this.btn_Remove.Size = new System.Drawing.Size(261, 30);
+            this.btn_Remove.TabIndex = 38;
+            this.btn_Remove.Text = "Remove card";
+            this.btn_Remove.UseVisualStyleBackColor = true;
+            this.btn_Remove.Click += new System.EventHandler(this.btn_Remove_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1252, 781);
+            this.ClientSize = new System.Drawing.Size(1252, 788);
+            this.Controls.Add(this.btn_Remove);
+            this.Controls.Add(this.btn_Attach);
             this.Controls.Add(this.gb_Input);
             this.Controls.Add(this.btn_Auth);
             this.Controls.Add(this.btn_CheckConnection);
@@ -1225,7 +1272,11 @@
         private System.Windows.Forms.RadioButton rb_Card;
         private System.Windows.Forms.MaskedTextBox edt_HistoryTrID;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.RadioButton rb_LinkedCard;
+        private System.Windows.Forms.RadioButton rb_Outer;
         private System.Windows.Forms.RadioButton rb_Link;
+        private System.Windows.Forms.Button btn_Attach;
+        private System.Windows.Forms.Button btn_Remove;
     }
 }
 

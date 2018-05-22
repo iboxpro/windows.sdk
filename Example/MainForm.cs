@@ -21,6 +21,7 @@ namespace Example
 {
     public partial class MainForm : Form
     {
+        private const string ExtID = "TEST_APP_DOT_NET";
         private const string PRODUCT_CODE = "TELE2";
         private const string PRODUCT_FIELD_1_CODE = "PHONE_NUMBER";
         private const string PRODUCT_FIELD_2_CODE = "FIELD_2";
@@ -30,6 +31,7 @@ namespace Example
 
         private PaymentController m_PaymentController = PaymentController.Instance;
         private APIAuthResult m_AuthResult;
+        private List<LinkedCard> m_LinkedCards;
         private List<PortInfo> portInfos = new List<PortInfo>();
         private string divider = new string('=', 93);
 
@@ -141,6 +143,7 @@ namespace Example
             paymentContext.Description = edt_Description.Text;
             paymentContext.ReceiptEmail = "test@test.email";
             paymentContext.ReceiptPhone = "+71234567891";
+            paymentContext.ExtID = ExtID;
 
             if (rb_Card.Checked)
                 paymentContext.Method = PaymentMethod.Card;
@@ -150,6 +153,32 @@ namespace Example
                 paymentContext.Method = PaymentMethod.Credit;
             else if (rb_Link.Checked)
                 paymentContext.Method = PaymentMethod.Other;
+            else if (rb_Outer.Checked)
+                paymentContext.Method = PaymentMethod.OuterCard;
+            else if (rb_LinkedCard.Checked)
+            {
+                paymentContext.Method = PaymentMethod.LinkedCard;
+                if (m_LinkedCards != null && m_LinkedCards.Count > 0)
+                {
+                    int selectedCardIndex = ShowDialog(m_LinkedCards.ConvertAll(c => c.Alias), "Select card");
+                    if (selectedCardIndex >= 0)
+                    {
+                        var selectedCard = m_LinkedCards[selectedCardIndex];
+                        log("CARD " + selectedCard.ID + " ALIAS " + selectedCard.Alias);
+                        paymentContext.LinkedCardID = selectedCard.ID;
+                    }
+                    else
+                    {
+                        log("ERROR : CANCEL SELECT CARD");
+                        return;
+                    }
+                }
+                else
+                {
+                    log("ERROR : NO LINKED CARDS");
+                    return;
+                }
+            }
 
             string path = edt_ImageFilePath.Text;
             if (!string.IsNullOrEmpty(path))
@@ -167,6 +196,18 @@ namespace Example
                     }
                 }
             }
+
+            /*
+            if (true)
+            {
+                paymentContext.PaymentProductCode = "TELE2";
+                var paymentProductTextData = new Dictionary<string, string>(3);
+                paymentProductTextData.Add("PHONE_NUMBER", edt_Field1.Text);
+                paymentProductTextData.Add("AUTOPAY", "0");
+                paymentProductTextData.Add("ReceiptEmail", "testibox85@gmail.com");
+                paymentContext.PaymentProductTextDictionary = paymentProductTextData;
+            }
+            */
 
             if (hasProduct)
             {
@@ -247,21 +288,8 @@ namespace Example
                             if (acquirers.Count == 1)
                                 paymentContext.AcquirerCode = acquirers.First().Key;
                             else {
-                                string s_acquirers = string.Empty;
-                                for (int i = 0; i < acquirers.Count; i++)
-                                    s_acquirers += string.Format("{0}-{1} ", i, acquirers.Values.ToList()[i]);
-
-                                string strNumber = ShowDialog(s_acquirers, "Select acquirer");
-
-                                try
-                                {
-                                    int index = int.Parse(strNumber);
-                                    paymentContext.AcquirerCode = acquirers.Keys.ToList()[index];
-                                }
-                                catch (Exception)
-                                {
-
-                                }
+                                int index = ShowDialog(acquirers.Values.ToList(), "Select acquirer");
+                                paymentContext.AcquirerCode = acquirers.Keys.ToList()[Math.Max(0, index)];
                             }
                         }
                     }
@@ -271,7 +299,7 @@ namespace Example
             {
                 m_PaymentController.StartPayment(paymentContext);
                 log(divider);
-                log(string.Format("STARTING NEW PAYMENT : {0}{1}", Environment.NewLine, paymentContext.ToString()));
+                log(string.Format("STARTING NEW PAYMENT : {0}{1}", Environment.NewLine, Newtonsoft.Json.JsonConvert.SerializeObject(paymentContext, Newtonsoft.Json.Formatting.Indented)));
             }
             catch (InvalidOperationException e)
             {
@@ -291,7 +319,17 @@ namespace Example
                 decimal? amountToReverse = string.IsNullOrEmpty(edt_ReverseAmount.Text) ? null : (decimal?)decimal.Parse(edt_ReverseAmount.Text);
                 string receiptEmail = "test@test.email";
                 string receiptPhone = "+71234567891";
-                m_PaymentController.StartReverse(trID, mode, amountToReverse, receiptEmail, receiptPhone);
+
+                m_PaymentController.StartReverse(new ReversePaymentContext()
+                    {
+                        TransactionID = trID,
+                        Mode = mode,
+                        AmountToReverse = amountToReverse,
+                        ReceiptEmail = receiptEmail,
+                        ReceiptPhone = receiptPhone,
+                        ExtID = MainForm.ExtID
+                    }
+                );
                 log(divider);
                 log(string.Format("{0} PAYMENT : {1}{2}", mode == ReverseMode.Cancel ? "CANCEL" : "RETURN", Environment.NewLine, trID));
             }
@@ -436,6 +474,7 @@ namespace Example
                 m_AuthResult = result;
                 if (result != null && result.ErrorCode == 0)
                 {
+                    m_LinkedCards = m_AuthResult.Account.LinkedCards;
                     log(Newtonsoft.Json.JsonConvert.SerializeObject(result.Account, Newtonsoft.Json.Formatting.Indented));
                 }
                 else
@@ -446,47 +485,160 @@ namespace Example
             });
         }
 
-        private static string ShowDialog(string text, string caption)
+        private void attachLinkedCard()
         {
+            checkCredentials();
+            var currency = rb_RUB.Checked ? Currency.RUB : Currency.VND;
+            string acquirerCode = null;
+            if (m_AuthResult != null && m_AuthResult.ErrorCode == 0 && m_AuthResult.Account != null)
+            {
+                var acquirersByMethod = m_AuthResult.Account.AcquirersByMethods;
+                if (acquirersByMethod != null && acquirersByMethod.Count != 0)
+                {
+                    if (acquirersByMethod.ContainsKey(PaymentMethod.Card))
+                    {
+                        var acquirers = acquirersByMethod[PaymentMethod.Card];
+                        if (acquirers.Count == 1)
+                            acquirerCode = acquirers.First().Key;
+                        else
+                        {
+                            int index = ShowDialog(acquirers.Values.ToList(), "Select acquirer");
+                            acquirerCode = acquirers.Keys.ToList()[Math.Max(0, index)];
+                        }
+                    }
+                }
+            }
+            try
+            {
+                m_PaymentController.AddLinkedCard(currency, acquirerCode);
+                log(divider);
+                log("STARTING LINKED CARD ATTACH");
+            }
+            catch (InvalidOperationException e)
+            {
+                log(string.Format("ERROR : {0}", e.Message));
+                return;
+            }
+        }
+
+        private void removeLinkedCard()
+        {
+            checkCredentials();
+            log(divider);
+            if (m_LinkedCards != null && m_LinkedCards.Count > 0)
+            {
+                int selectedCardIndex = ShowDialog(m_LinkedCards.ConvertAll(c => c.Alias), "Select card");
+                if (selectedCardIndex >= 0)
+                {
+                    var selectedCard = m_LinkedCards[selectedCardIndex];
+                    Task.Factory.StartNew(() =>
+                    {
+                        log("REMOVE LINKED CARD " + selectedCard.ID + " ALIAS " + selectedCard.Alias);
+                        try
+                        {
+                            var result = m_PaymentController.RemoveLinkedCard(selectedCard.ID);
+                            if (result != null && result.ErrorCode == 0)
+                            {
+                                log("SUCCESS!");
+                                getLinkedCards();
+                            }
+                            else
+                                log(string.Format("REMOVE LINKED CARD ERROR : {0}({1})", (result == null ? "null" : result.ErrorMessage), (result == null ? "null" : result.ErrorCode.ToString())));
+                        }
+                        catch (InvalidOperationException e)
+                        {
+                            log(string.Format("ERROR : {0}", e.Message));
+                            return;
+                        }
+                    });
+                }
+                else
+                {
+                    log("ERROR : CANCEL SELECT CARD");
+                    return;
+                }
+            }
+            else
+                log("ERROR : NO LINKED CARDS");
+        }
+
+        private void getLinkedCards()
+        {
+            checkCredentials();
+            log(divider);
+            Task.Factory.StartNew(() =>
+            {
+                log("GET LINKED CARDS");
+                try
+                {
+                    var result = m_PaymentController.GetLinkedCards();
+                    if (result != null && result.ErrorCode == 0)
+                    {
+                        m_LinkedCards = result.LinkedCards;
+                        log(Newtonsoft.Json.JsonConvert.SerializeObject(result, Newtonsoft.Json.Formatting.Indented));
+                    }
+                    else
+                        log(string.Format("GET LINKED CARDS ERROR : {0}({1})", (result == null ? "null" : result.ErrorMessage), (result == null ? "null" : result.ErrorCode.ToString())));
+                }
+                catch (InvalidOperationException e)
+                {
+                    log(string.Format("ERROR : {0}", e.Message));
+                    return;
+                }
+            });
+        }
+
+        private static int ShowDialog(List<string> items, string title)
+        {
+            int selected = -1;
             Form prompt = new Form()
             {
-                Width = 500,
-                Height = 150,
+                ClientSize = new Size(219, 84),
+                AutoScaleDimensions = new SizeF(6F, 13F),
+                AutoScaleMode = AutoScaleMode.Font,
                 FormBorderStyle = FormBorderStyle.FixedDialog,
-                Text = caption,
-                StartPosition = FormStartPosition.CenterScreen
+                MinimizeBox = false,
+                MaximizeBox = false,
+                ShowInTaskbar = false,
+                Name = title,
+                Text = title,
+                StartPosition = FormStartPosition.CenterParent
             };
-            Label textLabel = new Label() { Left = 50, Top = 20, Text = text };
-            TextBox textBox = new TextBox() { Left = 50, Top = 50, Width = 400 };
-            Button confirmation = new Button() { Text = "Ok", Left = 350, Width = 100, Top = 70, DialogResult = DialogResult.OK };
-            confirmation.Click += (sender, e) => { prompt.Close(); };
-            prompt.Controls.Add(textBox);
-            prompt.Controls.Add(confirmation);
-            prompt.Controls.Add(textLabel);
-            prompt.AcceptButton = confirmation;
+            Label lblTitle = new Label() { AutoSize = true, Location = new Point(12, 9), Text = title, TextAlign = ContentAlignment.TopCenter };
+            ComboBox cmbSelection = new ComboBox() { FormattingEnabled = true, Location = new Point(12, 25), Size = new Size(199, 21) };
+            Button btnAccept = new Button() { Location = new Point(12, 52), Size = new Size(96, 23), Text = "OK" };
+            Button btnCancel = new Button() { Location = new Point(114, 52), Size = new Size(96, 23), Text = "Cancel" };
 
-            return prompt.ShowDialog() == DialogResult.OK ? textBox.Text : "";
+            cmbSelection.Items.AddRange(items.ToArray());
+            btnAccept.Click += (object sender, EventArgs e) => {
+                selected = cmbSelection.SelectedIndex;
+                prompt.DialogResult = DialogResult.OK;
+                prompt.Close();
+            };
+            btnCancel.Click += (object sender, EventArgs e) => {
+                prompt.DialogResult = DialogResult.Cancel;
+                prompt.Close();
+            };
+            if (items != null && items.Count > 0)
+                cmbSelection.SelectedIndex = 0;
+
+            prompt.Controls.Add(lblTitle);
+            prompt.Controls.Add(cmbSelection);
+            prompt.Controls.Add(btnAccept);
+            prompt.Controls.Add(btnCancel);
+            prompt.CancelButton = btnCancel;
+            prompt.AcceptButton = btnAccept;
+
+            return prompt.ShowDialog() == DialogResult.OK ? selected : -1;            
         }
 
         private int onRequestSelectApplication(List<string> apps)
         {
             log("REQUEST SELECT APP");
             log(string.Join(Environment.NewLine, apps));
-
-            String strApps = string.Empty;
-            for (int i = 0; i < apps.Count; i++)
-                strApps += string.Format("{0}-{1} ", i, apps[i]);
-
-            string strNumber = ShowDialog(strApps, "Select application");
-
-            try
-            {
-                return int.Parse(strNumber);
-            }
-            catch (Exception ex)
-            {
-                return 0;
-            }
+            
+            var selected = ShowDialog(apps, "Select application");
+            return Math.Max(0, selected);
         }
 
         private bool onRequestConfirmSchedule(List<KeyValuePair<DateTime, decimal>> steps, decimal totalAmount)
@@ -508,20 +660,8 @@ namespace Example
             log("REQUEST SELECT INPUT TYPE");
             log(string.Join(Environment.NewLine, allowedInputTypes.Select(it => it.ToString())));
 
-            var inputTypes = string.Empty;
-            for (int i = 0; i < allowedInputTypes.Count; i++)
-                inputTypes += string.Format("{0}-{1} ", i, allowedInputTypes[i].ToString());
-
-            string strNumber = ShowDialog(inputTypes, "Select input type");
-
-            try
-            {
-                return allowedInputTypes[int.Parse(strNumber)];
-            }
-            catch (Exception ex)
-            {
-                return allowedInputTypes[0];
-            }
+            var selected = ShowDialog(allowedInputTypes.ConvertAll(ait => ait.ToString()), "Select input type");
+            return allowedInputTypes[Math.Max(0, selected)];
         }
 
         private bool onCancellationTimeout()
@@ -550,74 +690,91 @@ namespace Example
         {
             try
             {
-
-                string emvdata = string.Empty;
-                if (result.TransactionItem.EMVData != null)
-                    foreach (String key in result.TransactionItem.EMVData.Keys)
-                        emvdata += string.Format ("{0}: {1}\n", key, result.TransactionItem.EMVData[key]);
-
-                log(string.Format("PAYMENT FINISHED : " + Environment.NewLine
-                    + " ID : {0}" + Environment.NewLine
-                    + " Invoice : {1}" + Environment.NewLine
-                    + " ApprovalCode : {2}" + Environment.NewLine
-                    + " Amount : {3}" + Environment.NewLine
-                    + " DateTime : {4}" + Environment.NewLine
-                    + " PAN : {5}" + Environment.NewLine
-                    + " Terminal : {6}" + Environment.NewLine
-                    + " EMVdata : {7}" + Environment.NewLine
-                    + " Link data : {8}" + Environment.NewLine
-                    + " SignatureRequired (tran) : {9}" + Environment.NewLine
-                    + " SignatureRequired : {10}",
-                    result.TransactionItem.ID,
-                    result.TransactionItem.Invoice,
-                    result.TransactionItem.AcquirerApprovalCode,
-                    result.TransactionItem.Amount,
-                    result.TransactionItem.Date,
-                    result.TransactionItem.Card != null ? result.TransactionItem.Card.PANMasked : "null",
-                    result.TransactionItem.TerminalName, emvdata,
-                    Newtonsoft.Json.JsonConvert.SerializeObject(result.TransactionItem.ExternalPayment, Newtonsoft.Json.Formatting.Indented),
-                    result.TransactionItem.SignatureRequired,
-                    result.RequiresSignature.Value));
-                log(divider);
-                                
-                System.Text.StringBuilder slipBuilder = new System.Text.StringBuilder();
-                slipBuilder.Append("___________SLIP___________\n");
-                if (m_AuthResult != null && m_AuthResult.ErrorCode == 0) { 
-                    slipBuilder.AppendLine(m_AuthResult.Account.BankName);
-                    slipBuilder.AppendLine(m_AuthResult.Account.ClientName);
-                    slipBuilder.AppendLine(m_AuthResult.Account.ClientLegalName);
-                    slipBuilder.AppendLine(m_AuthResult.Account.ClientPhone);
-                    slipBuilder.AppendLine(m_AuthResult.Account.ClientWeb);
-                }
-                slipBuilder.AppendFormat("Дата и время операции: {0}\n", result.TransactionItem.Date);
-                slipBuilder.AppendFormat("Терминал: {0}\n", result.TransactionItem.TerminalName);
-                slipBuilder.AppendFormat("Чек: {0}\n", result.TransactionItem.Invoice);
-                slipBuilder.AppendFormat("Код подтверждения: {0}\n", result.TransactionItem.AcquirerApprovalCode);
-                slipBuilder.AppendFormat("Карта: {0} {1}\n", result.TransactionItem.Card.IIN, result.TransactionItem.Card.PANMasked.Replace("*", " **** "));
-
-                if (result.TransactionItem.EMVData != null)
-                    foreach (String key in result.TransactionItem.EMVData.Keys)
-                        slipBuilder.AppendFormat("{0}: {1}\n", key, result.TransactionItem.EMVData[key]);
-
-                slipBuilder.AppendFormat("Имя: {0}\n", result.TransactionItem.CardholderName);
-                slipBuilder.AppendFormat("Операция: {0}\n", result.TransactionItem.Operation);
-
-                slipBuilder.AppendFormat("Итого: {0} р\n", result.TransactionItem.Amount);
-                slipBuilder.Append("Комиссия: 0.00 р\n");
-                slipBuilder.Append("Статус: Успешно\n");
-
-
-                if (result.TransactionItem.SignatureRequired)
+                if (result.ScheduleItem != null)
                 {
-                    slipBuilder.Append("Подпись клиента____________________\n");
+                    log("PAYMENT FINISHED :");
+                    log(Newtonsoft.Json.JsonConvert.SerializeObject(result.ScheduleItem, Newtonsoft.Json.Formatting.Indented));
+                }
+                else if (result.TransactionItem != null)
+                {
+                    string emvdata = string.Empty;
+                    if (result.TransactionItem.EMVData != null)
+                        foreach (String key in result.TransactionItem.EMVData.Keys)
+                            emvdata += string.Format("{0}: {1}\n", key, result.TransactionItem.EMVData[key]);
+
+                    log(string.Format("PAYMENT FINISHED : " + Environment.NewLine
+                        + " ID : {0}" + Environment.NewLine
+                        + " Invoice : {1}" + Environment.NewLine
+                        + " ApprovalCode : {2}" + Environment.NewLine
+                        + " Amount : {3}" + Environment.NewLine
+                        + " DateTime : {4}" + Environment.NewLine
+                        + " PAN : {5}" + Environment.NewLine
+                        + " Terminal : {6}" + Environment.NewLine
+                        + " EMVdata : {7}" + Environment.NewLine
+                        + " Link data : {8}" + Environment.NewLine
+                        + " SignatureRequired (tran) : {9}" + Environment.NewLine
+                        + " SignatureRequired : {10}",
+                        result.TransactionItem.ID,
+                        result.TransactionItem.Invoice,
+                        result.TransactionItem.AcquirerApprovalCode,
+                        result.TransactionItem.Amount,
+                        result.TransactionItem.Date,
+                        result.TransactionItem.Card != null ? result.TransactionItem.Card.PANMasked : "null",
+                        result.TransactionItem.TerminalName, emvdata,
+                        Newtonsoft.Json.JsonConvert.SerializeObject(result.TransactionItem.ExternalPayment, Newtonsoft.Json.Formatting.Indented),
+                        result.TransactionItem.SignatureRequired,
+                        result.RequiresSignature.Value));
+                    log(divider);
+
+                    System.Text.StringBuilder slipBuilder = new System.Text.StringBuilder();
+                    slipBuilder.Append("___________SLIP___________\n");
+                    if (m_AuthResult != null && m_AuthResult.ErrorCode == 0)
+                    {
+                        slipBuilder.AppendLine(m_AuthResult.Account.BankName);
+                        slipBuilder.AppendLine(m_AuthResult.Account.ClientName);
+                        slipBuilder.AppendLine(m_AuthResult.Account.ClientLegalName);
+                        slipBuilder.AppendLine(m_AuthResult.Account.ClientPhone);
+                        slipBuilder.AppendLine(m_AuthResult.Account.ClientWeb);
+                    }
+                    slipBuilder.AppendFormat("Дата и время операции: {0}\n", result.TransactionItem.Date);
+                    slipBuilder.AppendFormat("Терминал: {0}\n", result.TransactionItem.TerminalName);
+                    slipBuilder.AppendFormat("Чек: {0}\n", result.TransactionItem.Invoice);
+                    slipBuilder.AppendFormat("Код подтверждения: {0}\n", result.TransactionItem.AcquirerApprovalCode);
+                    slipBuilder.AppendFormat("Карта: {0} {1}\n", result.TransactionItem.Card.IIN, result.TransactionItem.Card.PANMasked.Replace("*", " **** "));
+
+                    if (result.TransactionItem.EMVData != null)
+                        foreach (String key in result.TransactionItem.EMVData.Keys)
+                            slipBuilder.AppendFormat("{0}: {1}\n", key, result.TransactionItem.EMVData[key]);
+
+                    slipBuilder.AppendFormat("Имя: {0}\n", result.TransactionItem.CardholderName);
+                    slipBuilder.AppendFormat("Операция: {0}\n", result.TransactionItem.Operation);
+
+                    slipBuilder.AppendFormat("Итого: {0} р\n", result.TransactionItem.Amount);
+                    slipBuilder.Append("Комиссия: 0.00 р\n");
+                    slipBuilder.Append("Статус: Успешно\n");
+
+
+                    if (result.TransactionItem.SignatureRequired)
+                    {
+                        slipBuilder.Append("Подпись клиента____________________\n");
+                    }
+                    else
+                    {
+                        if (result.TransactionItem.InputType == Ibox.Pro.SDK.External.Entry.InputType.Chip || result.TransactionItem.InputType == Ibox.Pro.SDK.External.Entry.InputType.NFC)
+                            slipBuilder.Append("Подтверждено вводом PIN\n");
+                    }
+
+                    log(slipBuilder.ToString());
+                }
+                else if (result.AttachedCard != null)
+                {
+                    log("ATTACH FINISHED :" + Environment.NewLine + Newtonsoft.Json.JsonConvert.SerializeObject(result, Newtonsoft.Json.Formatting.Indented));
+                    getLinkedCards();
                 }
                 else
-                {
-                    if (result.TransactionItem.InputType == Ibox.Pro.SDK.External.Entry.InputType.Chip || result.TransactionItem.InputType == Ibox.Pro.SDK.External.Entry.InputType.NFC)
-                        slipBuilder.Append("Подтверждено вводом PIN\n");
+                {                
+                    log("PAYMENT FINISHED");
                 }
-
-                log(slipBuilder.ToString());
 
                 log(divider);
             }
@@ -812,6 +969,16 @@ namespace Example
             auth();
         }
 
+        private void btn_Attach_Click(object sender, EventArgs e)
+        {
+            attachLinkedCard();
+        }
+
+        private void btn_Remove_Click(object sender, EventArgs e)
+        {
+            removeLinkedCard();
+        }
+
         private void MainForm_Load(object sender, EventArgs e)
         {
             new Thread(() =>
@@ -889,7 +1056,6 @@ namespace Example
                 catch { }
             }).Start();
         }
-
         #endregion
 
         public class PortInfo
