@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.btn_Enable = new System.Windows.Forms.Button();
             this.btn_Disable = new System.Windows.Forms.Button();
             this.btn_StartPayment = new System.Windows.Forms.Button();
@@ -112,7 +113,6 @@
             this.rb_Wisepad2 = new System.Windows.Forms.RadioButton();
             this.rb_Qpos_mini = new System.Windows.Forms.RadioButton();
             this.rb_Wisepad = new System.Windows.Forms.RadioButton();
-            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.cmb_Paired = new System.Windows.Forms.ComboBox();
             this.cb_Usb = new System.Windows.Forms.CheckBox();
             this.btn_CheckConnection = new System.Windows.Forms.Button();
@@ -126,6 +126,10 @@
             this.rb_Card = new System.Windows.Forms.RadioButton();
             this.btn_Attach = new System.Windows.Forms.Button();
             this.btn_Remove = new System.Windows.Forms.Button();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.cbTestPurchases = new System.Windows.Forms.CheckBox();
+            this.cbTestServerFisc = new System.Windows.Forms.CheckBox();
+            this.txtJson = new System.Windows.Forms.TextBox();
             this.gb_Regular.SuspendLayout();
             this.gb_Adjust.SuspendLayout();
             this.gb_History.SuspendLayout();
@@ -134,6 +138,7 @@
             this.gb_Currency.SuspendLayout();
             this.gb_Reader.SuspendLayout();
             this.gb_Input.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // btn_Enable
@@ -779,7 +784,7 @@
             // 
             // btn_Reverse
             // 
-            this.btn_Reverse.Location = new System.Drawing.Point(11, 677);
+            this.btn_Reverse.Location = new System.Drawing.Point(11, 668);
             this.btn_Reverse.Name = "btn_Reverse";
             this.btn_Reverse.Size = new System.Drawing.Size(261, 30);
             this.btn_Reverse.TabIndex = 15;
@@ -795,7 +800,7 @@
             this.gb_Reverse.Controls.Add(this.rb_Cancel);
             this.gb_Reverse.Controls.Add(this.rb_Return);
             this.gb_Reverse.Controls.Add(this.lbl_ReverseID);
-            this.gb_Reverse.Location = new System.Drawing.Point(11, 557);
+            this.gb_Reverse.Location = new System.Drawing.Point(11, 548);
             this.gb_Reverse.Name = "gb_Reverse";
             this.gb_Reverse.Size = new System.Drawing.Size(261, 114);
             this.gb_Reverse.TabIndex = 14;
@@ -923,7 +928,7 @@
             this.edt_Log.Name = "edt_Log";
             this.edt_Log.ReadOnly = true;
             this.edt_Log.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
-            this.edt_Log.Size = new System.Drawing.Size(698, 766);
+            this.edt_Log.Size = new System.Drawing.Size(698, 937);
             this.edt_Log.TabIndex = 36;
             this.edt_Log.Text = "";
             // 
@@ -1092,7 +1097,7 @@
             // 
             // btn_Attach
             // 
-            this.btn_Attach.Location = new System.Drawing.Point(12, 713);
+            this.btn_Attach.Location = new System.Drawing.Point(12, 704);
             this.btn_Attach.Name = "btn_Attach";
             this.btn_Attach.Size = new System.Drawing.Size(261, 30);
             this.btn_Attach.TabIndex = 37;
@@ -1102,7 +1107,7 @@
             // 
             // btn_Remove
             // 
-            this.btn_Remove.Location = new System.Drawing.Point(12, 749);
+            this.btn_Remove.Location = new System.Drawing.Point(12, 740);
             this.btn_Remove.Name = "btn_Remove";
             this.btn_Remove.Size = new System.Drawing.Size(261, 30);
             this.btn_Remove.TabIndex = 38;
@@ -1110,11 +1115,53 @@
             this.btn_Remove.UseVisualStyleBackColor = true;
             this.btn_Remove.Click += new System.EventHandler(this.btn_Remove_Click);
             // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.txtJson);
+            this.groupBox1.Controls.Add(this.cbTestServerFisc);
+            this.groupBox1.Controls.Add(this.cbTestPurchases);
+            this.groupBox1.Location = new System.Drawing.Point(17, 785);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(525, 153);
+            this.groupBox1.TabIndex = 39;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Purchases";
+            // 
+            // cbTestPurchases
+            // 
+            this.cbTestPurchases.AutoSize = true;
+            this.cbTestPurchases.Location = new System.Drawing.Point(4, 19);
+            this.cbTestPurchases.Name = "cbTestPurchases";
+            this.cbTestPurchases.Size = new System.Drawing.Size(99, 17);
+            this.cbTestPurchases.TabIndex = 0;
+            this.cbTestPurchases.Text = "Test purchases";
+            this.cbTestPurchases.UseVisualStyleBackColor = true;
+            // 
+            // cbTestServerFisc
+            // 
+            this.cbTestServerFisc.AutoSize = true;
+            this.cbTestServerFisc.Location = new System.Drawing.Point(109, 19);
+            this.cbTestServerFisc.Name = "cbTestServerFisc";
+            this.cbTestServerFisc.Size = new System.Drawing.Size(136, 17);
+            this.cbTestServerFisc.TabIndex = 1;
+            this.cbTestServerFisc.Text = "Test server fiscalization";
+            this.cbTestServerFisc.UseVisualStyleBackColor = true;
+            // 
+            // txtJson
+            // 
+            this.txtJson.Location = new System.Drawing.Point(7, 43);
+            this.txtJson.Multiline = true;
+            this.txtJson.Name = "txtJson";
+            this.txtJson.Size = new System.Drawing.Size(506, 104);
+            this.txtJson.TabIndex = 2;
+            this.txtJson.Text = resources.GetString("txtJson.Text");
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1252, 788);
+            this.ClientSize = new System.Drawing.Size(1252, 959);
+            this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btn_Remove);
             this.Controls.Add(this.btn_Attach);
             this.Controls.Add(this.gb_Input);
@@ -1172,6 +1219,8 @@
             this.gb_Reader.PerformLayout();
             this.gb_Input.ResumeLayout(false);
             this.gb_Input.PerformLayout();
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1261,7 +1310,6 @@
         private System.Windows.Forms.RadioButton rb_Qpos_mini;
         private System.Windows.Forms.RadioButton rb_Wisepad;
         private System.Windows.Forms.RadioButton rb_Wisepad2;
-        private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private System.Windows.Forms.ComboBox cmb_Paired;
         private System.Windows.Forms.CheckBox cb_Usb;
         private System.Windows.Forms.Button btn_CheckConnection;
@@ -1277,6 +1325,10 @@
         private System.Windows.Forms.RadioButton rb_Link;
         private System.Windows.Forms.Button btn_Attach;
         private System.Windows.Forms.Button btn_Remove;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.TextBox txtJson;
+        private System.Windows.Forms.CheckBox cbTestServerFisc;
+        private System.Windows.Forms.CheckBox cbTestPurchases;
     }
 }
 

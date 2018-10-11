@@ -16,6 +16,8 @@ using System.IO.Ports;
 using InTheHand.Net.Sockets;
 using InTheHand.Net;
 using Ibox.Pro.SDK.External.Entry;
+using Newtonsoft.Json;
+using System.Text;
 
 namespace Example
 {
@@ -25,7 +27,8 @@ namespace Example
         private const string PRODUCT_CODE = "TELE2";
         private const string PRODUCT_FIELD_1_CODE = "PHONE_NUMBER";
         private const string PRODUCT_FIELD_2_CODE = "FIELD_2";
-
+       
+               
         private Font fntRegular = new Font("Courier New", 8.25F);
         private Font fntStrikeout = new Font("Courier New", 8.25F, FontStyle.Strikeout);
 
@@ -116,6 +119,8 @@ namespace Example
                                         edt_Log.SelectionFont = fntRegular;
 
                                     edt_Log.AppendText(log + Environment.NewLine);
+                                    edt_Log.SelectionStart = edt_Log.Text.Length;
+                                    edt_Log.ScrollToCaret();
                                 }
                             }
                             catch (ObjectDisposedException e)
@@ -145,10 +150,34 @@ namespace Example
             paymentContext.ReceiptPhone = "+71234567891";
             paymentContext.ExtID = ExtID;
 
+
+            if (cbTestPurchases.Checked)
+            {
+               List<Purchase> purchases = Utils.GetPurchasesFromJson(txtJson.Text);
+
+                if (purchases == null)
+                {
+                    MessageBox.Show("Couldn't parse purchases!");
+                }
+                else
+                {
+                    foreach (Purchase p in purchases)
+                        paymentContext.PutPurchase(p);
+                }
+
+            }
+
             if (rb_Card.Checked)
                 paymentContext.Method = PaymentMethod.Card;
             else if (rb_Cash.Checked)
+            {
                 paymentContext.Method = PaymentMethod.Cash;
+                decimal cashGot= paymentContext.Amount;
+                string s_AmountCashGot = Utils.ShowDialog("Cash got", cashGot.ToString("F2"));
+                if (s_AmountCashGot == null || !decimal.TryParse(s_AmountCashGot, out cashGot))
+                    return;
+                paymentContext.AmountCashGot = cashGot;
+            }
             else if (rb_Credit.Checked)
                 paymentContext.Method = PaymentMethod.Credit;
             else if (rb_Link.Checked)
@@ -157,10 +186,14 @@ namespace Example
                 paymentContext.Method = PaymentMethod.OuterCard;
             else if (rb_LinkedCard.Checked)
             {
+
+                APIReadLinkedCardsResult result = PaymentController.Instance.GetLinkedCards();
+                if (result.ErrorCode == 0)
+                    m_LinkedCards = result.LinkedCards;
                 paymentContext.Method = PaymentMethod.LinkedCard;
                 if (m_LinkedCards != null && m_LinkedCards.Count > 0)
                 {
-                    int selectedCardIndex = ShowDialog(m_LinkedCards.ConvertAll(c => c.Alias), "Select card");
+                    int selectedCardIndex = Utils.ShowDialog(m_LinkedCards.ConvertAll(c => c.Alias), "Select card");
                     if (selectedCardIndex >= 0)
                     {
                         var selectedCard = m_LinkedCards[selectedCardIndex];
@@ -288,7 +321,7 @@ namespace Example
                             if (acquirers.Count == 1)
                                 paymentContext.AcquirerCode = acquirers.First().Key;
                             else {
-                                int index = ShowDialog(acquirers.Values.ToList(), "Select acquirer");
+                                int index = Utils.ShowDialog(acquirers.Values.ToList(), "Select acquirer");
                                 paymentContext.AcquirerCode = acquirers.Keys.ToList()[Math.Max(0, index)];
                             }
                         }
@@ -319,17 +352,31 @@ namespace Example
                 decimal? amountToReverse = string.IsNullOrEmpty(edt_ReverseAmount.Text) ? null : (decimal?)decimal.Parse(edt_ReverseAmount.Text);
                 string receiptEmail = "test@test.email";
                 string receiptPhone = "+71234567891";
+                var reverseContext = new ReversePaymentContext()
+                {
+                    TransactionID = trID,
+                    Mode = mode,
+                    AmountToReverse = amountToReverse,
+                    ReceiptEmail = receiptEmail,
+                    ReceiptPhone = receiptPhone,
+                    ExtID = MainForm.ExtID
+                };
+                if (cbTestPurchases.Checked)
+                {
+                    List<Purchase> purchases = Utils.GetPurchasesFromJson(txtJson.Text);
 
-                m_PaymentController.StartReverse(new ReversePaymentContext()
+                    if (purchases == null)
                     {
-                        TransactionID = trID,
-                        Mode = mode,
-                        AmountToReverse = amountToReverse,
-                        ReceiptEmail = receiptEmail,
-                        ReceiptPhone = receiptPhone,
-                        ExtID = MainForm.ExtID
+                        MessageBox.Show("Couldn't parse purchases!");
                     }
-                );
+                    else
+                    {
+                        foreach (Purchase p in purchases)
+                            reverseContext.PutPurchase(p);
+                    }
+
+                }
+                m_PaymentController.StartReverse(reverseContext);
                 log(divider);
                 log(string.Format("{0} PAYMENT : {1}{2}", mode == ReverseMode.Cancel ? "CANCEL" : "RETURN", Environment.NewLine, trID));
             }
@@ -448,7 +495,10 @@ namespace Example
                         if (result.Transactions != null)
                             transactions.AddRange(result.Transactions);
                         if (transactions != null && transactions.Count == 1)
-                            log(Newtonsoft.Json.JsonConvert.SerializeObject(transactions[0], Newtonsoft.Json.Formatting.Indented));
+                        {
+                            log(JsonConvert.SerializeObject(transactions[0], Formatting.Indented));
+                            log(Utils.BuildInvoice(m_AuthResult.Account, transactions[0]));
+                        }
                         else
                             log("Transaction not found or not unique");
                     }
@@ -502,7 +552,7 @@ namespace Example
                             acquirerCode = acquirers.First().Key;
                         else
                         {
-                            int index = ShowDialog(acquirers.Values.ToList(), "Select acquirer");
+                            int index = Utils.ShowDialog(acquirers.Values.ToList(), "Select acquirer");
                             acquirerCode = acquirers.Keys.ToList()[Math.Max(0, index)];
                         }
                     }
@@ -527,7 +577,7 @@ namespace Example
             log(divider);
             if (m_LinkedCards != null && m_LinkedCards.Count > 0)
             {
-                int selectedCardIndex = ShowDialog(m_LinkedCards.ConvertAll(c => c.Alias), "Select card");
+                int selectedCardIndex = Utils.ShowDialog(m_LinkedCards.ConvertAll(c => c.Alias), "Select card");
                 if (selectedCardIndex >= 0)
                 {
                     var selectedCard = m_LinkedCards[selectedCardIndex];
@@ -588,56 +638,12 @@ namespace Example
             });
         }
 
-        private static int ShowDialog(List<string> items, string title)
-        {
-            int selected = -1;
-            Form prompt = new Form()
-            {
-                ClientSize = new Size(219, 84),
-                AutoScaleDimensions = new SizeF(6F, 13F),
-                AutoScaleMode = AutoScaleMode.Font,
-                FormBorderStyle = FormBorderStyle.FixedDialog,
-                MinimizeBox = false,
-                MaximizeBox = false,
-                ShowInTaskbar = false,
-                Name = title,
-                Text = title,
-                StartPosition = FormStartPosition.CenterParent
-            };
-            Label lblTitle = new Label() { AutoSize = true, Location = new Point(12, 9), Text = title, TextAlign = ContentAlignment.TopCenter };
-            ComboBox cmbSelection = new ComboBox() { FormattingEnabled = true, Location = new Point(12, 25), Size = new Size(199, 21) };
-            Button btnAccept = new Button() { Location = new Point(12, 52), Size = new Size(96, 23), Text = "OK" };
-            Button btnCancel = new Button() { Location = new Point(114, 52), Size = new Size(96, 23), Text = "Cancel" };
-
-            cmbSelection.Items.AddRange(items.ToArray());
-            btnAccept.Click += (object sender, EventArgs e) => {
-                selected = cmbSelection.SelectedIndex;
-                prompt.DialogResult = DialogResult.OK;
-                prompt.Close();
-            };
-            btnCancel.Click += (object sender, EventArgs e) => {
-                prompt.DialogResult = DialogResult.Cancel;
-                prompt.Close();
-            };
-            if (items != null && items.Count > 0)
-                cmbSelection.SelectedIndex = 0;
-
-            prompt.Controls.Add(lblTitle);
-            prompt.Controls.Add(cmbSelection);
-            prompt.Controls.Add(btnAccept);
-            prompt.Controls.Add(btnCancel);
-            prompt.CancelButton = btnCancel;
-            prompt.AcceptButton = btnAccept;
-
-            return prompt.ShowDialog() == DialogResult.OK ? selected : -1;            
-        }
-
         private int onRequestSelectApplication(List<string> apps)
         {
             log("REQUEST SELECT APP");
             log(string.Join(Environment.NewLine, apps));
             
-            var selected = ShowDialog(apps, "Select application");
+            var selected = Utils.ShowDialog(apps, "Select application");
             return Math.Max(0, selected);
         }
 
@@ -660,7 +666,7 @@ namespace Example
             log("REQUEST SELECT INPUT TYPE");
             log(string.Join(Environment.NewLine, allowedInputTypes.Select(it => it.ToString())));
 
-            var selected = ShowDialog(allowedInputTypes.ConvertAll(ait => ait.ToString()), "Select input type");
+            var selected = Utils.ShowDialog(allowedInputTypes.ConvertAll(ait => ait.ToString()), "Select input type");
             return allowedInputTypes[Math.Max(0, selected)];
         }
 
@@ -697,36 +703,52 @@ namespace Example
                 }
                 else if (result.TransactionItem != null)
                 {
-                    string emvdata = string.Empty;
-                    if (result.TransactionItem.EMVData != null)
-                        foreach (String key in result.TransactionItem.EMVData.Keys)
-                            emvdata += string.Format("{0}: {1}\n", key, result.TransactionItem.EMVData[key]);
+                    Transaction resultTran = result.TransactionItem;
 
-                    log(string.Format("PAYMENT FINISHED : " + Environment.NewLine
-                        + " ID : {0}" + Environment.NewLine
-                        + " Invoice : {1}" + Environment.NewLine
-                        + " ApprovalCode : {2}" + Environment.NewLine
-                        + " Amount : {3}" + Environment.NewLine
-                        + " DateTime : {4}" + Environment.NewLine
-                        + " PAN : {5}" + Environment.NewLine
-                        + " Terminal : {6}" + Environment.NewLine
-                        + " EMVdata : {7}" + Environment.NewLine
-                        + " Link data : {8}" + Environment.NewLine
-                        + " SignatureRequired (tran) : {9}" + Environment.NewLine
-                        + " SignatureRequired : {10}",
-                        result.TransactionItem.ID,
-                        result.TransactionItem.Invoice,
-                        result.TransactionItem.AcquirerApprovalCode,
-                        result.TransactionItem.Amount,
-                        result.TransactionItem.Date,
-                        result.TransactionItem.Card != null ? result.TransactionItem.Card.PANMasked : "null",
-                        result.TransactionItem.TerminalName, emvdata,
-                        Newtonsoft.Json.JsonConvert.SerializeObject(result.TransactionItem.ExternalPayment, Newtonsoft.Json.Formatting.Indented),
-                        result.TransactionItem.SignatureRequired,
-                        result.RequiresSignature.Value));
+                    if (cbTestServerFisc.Checked) { 
+                        resultTran = Task.Factory.StartNew<Transaction>(() =>
+                        {
+                            var transaction = result.TransactionItem;
+                            var uptime = new DateTime();
+                            var timeout = new TimeSpan(0, 1, 0);
+                            int i = 0;
+                            while (transaction.FiscalInfo == null || (transaction.FiscalInfo.FiscalStatus != FiscalStatus.Success && transaction.FiscalInfo.FiscalStatus != FiscalStatus.Failure))
+                            {
+                                if (new DateTime() - uptime > timeout)
+                                {
+                                    log("Cancelling fiscal data request by timeout");
+                                    break;
+                                }
+                                Thread.Sleep(5000);
+                                var statusRequestResult = PaymentController.Instance.GetTransactionByID(transaction.ID);
+                                log("Get fiscal data attempt " + ++i);
+                                if (statusRequestResult != null && statusRequestResult.ErrorCode == 0)
+                                {
+                                    if (statusRequestResult.Transactions != null && statusRequestResult.Transactions.Count == 1)
+                                    {
+                                        transaction = statusRequestResult.Transactions[0];
+                                        log(JsonConvert.SerializeObject(transaction.FiscalInfo, Formatting.Indented));
+                                    }
+                                    else
+                                        log("Failed : transaction not found or not unique");
+                                }
+                                else
+                                    log("Failed : " + statusRequestResult == null ? "null" : statusRequestResult.ErrorMessage);
+                            }
+                            return transaction ?? result.TransactionItem;
+                        }
+                        ).GetAwaiter().GetResult();
+                    }
+                    string emvdata = string.Empty;
+                    if (resultTran.EMVData != null)
+                        foreach (String key in resultTran.EMVData.Keys)
+                            emvdata += string.Format("{0}: {1}\n", key, resultTran.EMVData[key]);
+
+                    log("PAYMENT FINISHED : " + Environment.NewLine + JsonConvert.SerializeObject(resultTran, Formatting.Indented));
                     log(divider);
 
-                    System.Text.StringBuilder slipBuilder = new System.Text.StringBuilder();
+                    if (cbTestServerFisc.Checked) log(Utils.BuildInvoice(m_AuthResult.Account, resultTran));
+                    StringBuilder slipBuilder = new StringBuilder();
                     slipBuilder.Append("___________SLIP___________\n");
                     if (m_AuthResult != null && m_AuthResult.ErrorCode == 0)
                     {
@@ -736,31 +758,30 @@ namespace Example
                         slipBuilder.AppendLine(m_AuthResult.Account.ClientPhone);
                         slipBuilder.AppendLine(m_AuthResult.Account.ClientWeb);
                     }
-                    slipBuilder.AppendFormat("Дата и время операции: {0}\n", result.TransactionItem.Date);
-                    slipBuilder.AppendFormat("Терминал: {0}\n", result.TransactionItem.TerminalName);
-                    slipBuilder.AppendFormat("Чек: {0}\n", result.TransactionItem.Invoice);
-                    slipBuilder.AppendFormat("Код подтверждения: {0}\n", result.TransactionItem.AcquirerApprovalCode);
-                    slipBuilder.AppendFormat("Карта: {0} {1}\n", result.TransactionItem.Card.IIN, result.TransactionItem.Card.PANMasked.Replace("*", " **** "));
+                    slipBuilder.AppendFormat("Дата и время операции: {0}\n", resultTran.Date);
+                    slipBuilder.AppendFormat("Терминал: {0}\n", resultTran.TerminalName);
+                    slipBuilder.AppendFormat("Чек: {0}\n", resultTran.Invoice);
+                    slipBuilder.AppendFormat("Код подтверждения: {0}\n", resultTran.AcquirerApprovalCode);
+                    slipBuilder.AppendFormat("Карта: {0} {1}\n", resultTran.Card.IIN, resultTran.Card.PANMasked.Replace("*", " **** "));
 
-                    if (result.TransactionItem.EMVData != null)
-                        foreach (String key in result.TransactionItem.EMVData.Keys)
-                            slipBuilder.AppendFormat("{0}: {1}\n", key, result.TransactionItem.EMVData[key]);
+                    if (resultTran.EMVData != null)
+                        foreach (String key in resultTran.EMVData.Keys)
+                            slipBuilder.AppendFormat("{0}: {1}\n", key, resultTran.EMVData[key]);
 
-                    slipBuilder.AppendFormat("Имя: {0}\n", result.TransactionItem.CardholderName);
-                    slipBuilder.AppendFormat("Операция: {0}\n", result.TransactionItem.Operation);
+                    slipBuilder.AppendFormat("Имя: {0}\n", resultTran.CardholderName);
+                    slipBuilder.AppendFormat("Операция: {0}\n", resultTran.Operation);
 
-                    slipBuilder.AppendFormat("Итого: {0} р\n", result.TransactionItem.Amount);
+                    slipBuilder.AppendFormat("Итого: {0} р\n", resultTran.Amount);
                     slipBuilder.Append("Комиссия: 0.00 р\n");
                     slipBuilder.Append("Статус: Успешно\n");
 
-
-                    if (result.TransactionItem.SignatureRequired)
+                    if (resultTran.SignatureRequired)
                     {
                         slipBuilder.Append("Подпись клиента____________________\n");
                     }
                     else
                     {
-                        if (result.TransactionItem.InputType == Ibox.Pro.SDK.External.Entry.InputType.Chip || result.TransactionItem.InputType == Ibox.Pro.SDK.External.Entry.InputType.NFC)
+                        if (resultTran.InputType == Ibox.Pro.SDK.External.Entry.InputType.Chip || resultTran.InputType == Ibox.Pro.SDK.External.Entry.InputType.NFC)
                             slipBuilder.Append("Подтверждено вводом PIN\n");
                     }
 

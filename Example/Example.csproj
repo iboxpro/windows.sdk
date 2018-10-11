@@ -39,22 +39,33 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="DevReactor.Toolbox.SDK, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\DevReactor.Toolbox.SDK.1.1.32\lib\net452\DevReactor.Toolbox.SDK.dll</HintPath>
+    <Reference Include="BBDeviceClassicDesktop">
+      <HintPath>..\SDK\BBDeviceClassicDesktop.dll</HintPath>
     </Reference>
-    <Reference Include="iboxExternalSDK, Version=1.4.16.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Cardport.Pro.SDK">
+      <HintPath>..\SDK\Cardport.Pro.SDK.dll</HintPath>
+    </Reference>
+    <Reference Include="CryptoGraphy">
+      <HintPath>..\SDK\CryptoGraphy.dll</HintPath>
+    </Reference>
+    <Reference Include="DevReactor.Toolbox.SDK">
+      <HintPath>..\SDK\DevReactor.Toolbox.SDK.dll</HintPath>
+    </Reference>
+    <Reference Include="iboxExternalSDK">
       <HintPath>..\SDK\iboxExternalSDK.dll</HintPath>
     </Reference>
     <Reference Include="InTheHand.Net.Personal">
-      <HintPath>..\iboxExternalSDK\bin\Debug\InTheHand.Net.Personal.dll</HintPath>
+      <HintPath>..\SDK\InTheHand.Net.Personal.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="NAudio">
+      <HintPath>..\SDK\NAudio.dll</HintPath>
     </Reference>
-    <Reference Include="QposWindowsServiceLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\iboxExternalSDK\libs\qpos\QposWindowsServiceLib.dll</HintPath>
+      <HintPath>..\SDK\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="QposWindowsServiceLib">
+      <HintPath>..\SDK\QposWindowsServiceLib.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -77,6 +88,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils.cs" />
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -90,7 +102,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
