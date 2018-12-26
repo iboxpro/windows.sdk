@@ -39,37 +39,49 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="BBDeviceClassicDesktop">
+    <Reference Include="BBDeviceClassicDesktop, Version=3.4.0.0, Culture=neutral, PublicKeyToken=50b139c7ff3a5993, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\SDK\BBDeviceClassicDesktop.dll</HintPath>
     </Reference>
-    <Reference Include="Cardport.Pro.SDK">
+    <Reference Include="Cardport.Pro.SDK, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\SDK\Cardport.Pro.SDK.dll</HintPath>
     </Reference>
-    <Reference Include="CryptoGraphy">
+    <Reference Include="CryptoGraphy, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\SDK\CryptoGraphy.dll</HintPath>
     </Reference>
-    <Reference Include="DevReactor.Toolbox.SDK">
+    <Reference Include="DevReactor.Toolbox.SDK, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\SDK\DevReactor.Toolbox.SDK.dll</HintPath>
     </Reference>
-    <Reference Include="iboxExternalSDK">
+    <Reference Include="iboxExternalSDK, Version=1.4.26.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\SDK\iboxExternalSDK.dll</HintPath>
     </Reference>
-    <Reference Include="InTheHand.Net.Personal">
+    <Reference Include="InTheHand.Net.Personal, Version=3.5.605.0, Culture=neutral, PublicKeyToken=ea38caa273134499, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\SDK\InTheHand.Net.Personal.dll</HintPath>
     </Reference>
-    <Reference Include="NAudio">
+    <Reference Include="NAudio, Version=1.8.0.0, Culture=neutral, PublicKeyToken=50b139c7ff3a5993, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\SDK\NAudio.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\SDK\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="QposWindowsServiceLib">
+    <Reference Include="QposWindowsServiceLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\SDK\QposWindowsServiceLib.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Management" />
+    <Reference Include="System.Runtime.WindowsRuntime, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\SDK\System.Runtime.WindowsRuntime.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -102,6 +114,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

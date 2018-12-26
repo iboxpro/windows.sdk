@@ -186,10 +186,6 @@ namespace Example
                 paymentContext.Method = PaymentMethod.OuterCard;
             else if (rb_LinkedCard.Checked)
             {
-
-                APIReadLinkedCardsResult result = PaymentController.Instance.GetLinkedCards();
-                if (result.ErrorCode == 0)
-                    m_LinkedCards = result.LinkedCards;
                 paymentContext.Method = PaymentMethod.LinkedCard;
                 if (m_LinkedCards != null && m_LinkedCards.Count > 0)
                 {
@@ -823,7 +819,12 @@ namespace Example
                 PortInfo selectedPort = null;
                 if (!cb_Usb.Checked && portInfos != null && portInfos.Count > 0)
                     selectedPort = portInfos[cmb_Paired.SelectedIndex];
-                m_PaymentController.SetReaderType(readerType, (cb_Usb.Checked || selectedPort == null) ? null : selectedPort.portName);
+
+                //P17 only
+                Dictionary<String, object> settings = new Dictionary<string, object>();
+                settings["NOTUP"] = cb_notup.Checked;
+                
+                m_PaymentController.SetReaderType(readerType, (cb_Usb.Checked || selectedPort == null) ? null : selectedPort.portName, settings);
             }
             catch (InvalidOperationException ex)
             {
@@ -831,7 +832,7 @@ namespace Example
             }
 
             //DEBUG
-            m_PaymentController.Logger = delegate (string s_log) { log(s_log, Color.Blue); };
+            m_PaymentController.Logger = delegate (string s_log) {  log(s_log, Color.Blue); };
             //
 
             m_PaymentController.Enable();

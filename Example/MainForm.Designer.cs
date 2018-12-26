@@ -127,9 +127,10 @@
             this.btn_Attach = new System.Windows.Forms.Button();
             this.btn_Remove = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.cbTestPurchases = new System.Windows.Forms.CheckBox();
-            this.cbTestServerFisc = new System.Windows.Forms.CheckBox();
             this.txtJson = new System.Windows.Forms.TextBox();
+            this.cbTestServerFisc = new System.Windows.Forms.CheckBox();
+            this.cbTestPurchases = new System.Windows.Forms.CheckBox();
+            this.cb_notup = new System.Windows.Forms.CheckBox();
             this.gb_Regular.SuspendLayout();
             this.gb_Adjust.SuspendLayout();
             this.gb_History.SuspendLayout();
@@ -219,7 +220,7 @@
             // cb_Regular
             // 
             this.cb_Regular.AutoSize = true;
-            this.cb_Regular.Location = new System.Drawing.Point(415, 285);
+            this.cb_Regular.Location = new System.Drawing.Point(415, 302);
             this.cb_Regular.Name = "cb_Regular";
             this.cb_Regular.Size = new System.Drawing.Size(106, 17);
             this.cb_Regular.TabIndex = 23;
@@ -703,7 +704,7 @@
             // cb_Product
             // 
             this.cb_Product.AutoSize = true;
-            this.cb_Product.Location = new System.Drawing.Point(415, 308);
+            this.cb_Product.Location = new System.Drawing.Point(415, 321);
             this.cb_Product.Name = "cb_Product";
             this.cb_Product.Size = new System.Drawing.Size(127, 17);
             this.cb_Product.TabIndex = 24;
@@ -1127,15 +1128,14 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Purchases";
             // 
-            // cbTestPurchases
+            // txtJson
             // 
-            this.cbTestPurchases.AutoSize = true;
-            this.cbTestPurchases.Location = new System.Drawing.Point(4, 19);
-            this.cbTestPurchases.Name = "cbTestPurchases";
-            this.cbTestPurchases.Size = new System.Drawing.Size(99, 17);
-            this.cbTestPurchases.TabIndex = 0;
-            this.cbTestPurchases.Text = "Test purchases";
-            this.cbTestPurchases.UseVisualStyleBackColor = true;
+            this.txtJson.Location = new System.Drawing.Point(7, 43);
+            this.txtJson.Multiline = true;
+            this.txtJson.Name = "txtJson";
+            this.txtJson.Size = new System.Drawing.Size(506, 104);
+            this.txtJson.TabIndex = 2;
+            this.txtJson.Text = resources.GetString("txtJson.Text");
             // 
             // cbTestServerFisc
             // 
@@ -1147,23 +1147,36 @@
             this.cbTestServerFisc.Text = "Test server fiscalization";
             this.cbTestServerFisc.UseVisualStyleBackColor = true;
             // 
-            // txtJson
+            // cbTestPurchases
             // 
-            this.txtJson.Location = new System.Drawing.Point(7, 43);
-            this.txtJson.Multiline = true;
-            this.txtJson.Name = "txtJson";
-            this.txtJson.Size = new System.Drawing.Size(506, 104);
-            this.txtJson.TabIndex = 2;
-            this.txtJson.Text = resources.GetString("txtJson.Text");
+            this.cbTestPurchases.AutoSize = true;
+            this.cbTestPurchases.Location = new System.Drawing.Point(4, 19);
+            this.cbTestPurchases.Name = "cbTestPurchases";
+            this.cbTestPurchases.Size = new System.Drawing.Size(99, 17);
+            this.cbTestPurchases.TabIndex = 0;
+            this.cbTestPurchases.Text = "Test purchases";
+            this.cbTestPurchases.UseVisualStyleBackColor = true;
+            // 
+            // cb_notup
+            // 
+            this.cb_notup.AutoSize = true;
+            this.cb_notup.Location = new System.Drawing.Point(415, 285);
+            this.cb_notup.Name = "cb_notup";
+            this.cb_notup.Size = new System.Drawing.Size(94, 17);
+            this.cb_notup.TabIndex = 40;
+            this.cb_notup.Text = "P17 Auto NFC";
+            this.cb_notup.UseVisualStyleBackColor = true;
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1252, 959);
+            this.Controls.Add(this.cb_notup);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btn_Remove);
             this.Controls.Add(this.btn_Attach);
+            this.Controls.Add(this.cb_Regular);
             this.Controls.Add(this.gb_Input);
             this.Controls.Add(this.btn_Auth);
             this.Controls.Add(this.btn_CheckConnection);
@@ -1190,7 +1203,6 @@
             this.Controls.Add(this.btn_Adjust);
             this.Controls.Add(this.gb_Adjust);
             this.Controls.Add(this.gb_Regular);
-            this.Controls.Add(this.cb_Regular);
             this.Controls.Add(this.btn_ClearLog);
             this.Controls.Add(this.edt_Amount);
             this.Controls.Add(this.lbl_Description);
@@ -1329,6 +1341,7 @@
         private System.Windows.Forms.TextBox txtJson;
         private System.Windows.Forms.CheckBox cbTestServerFisc;
         private System.Windows.Forms.CheckBox cbTestPurchases;
+        private System.Windows.Forms.CheckBox cb_notup;
     }
 }
 
