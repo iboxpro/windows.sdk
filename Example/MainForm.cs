@@ -23,20 +23,25 @@ namespace Example
 {
     public partial class MainForm : Form
     {
-        private const string ExtID = "TEST_APP_DOT_NET";
-        private const string PRODUCT_CODE = "TELE2";
-        private const string PRODUCT_FIELD_1_CODE = "PHONE_NUMBER";
-        private const string PRODUCT_FIELD_2_CODE = "FIELD_2";
-       
+        public static readonly string DIVIDER = new string('=', 93);
+        private const string ExtID = "TEST_APP_DOT_NET";       
                
         private Font fntRegular = new Font("Courier New", 8.25F);
         private Font fntStrikeout = new Font("Courier New", 8.25F, FontStyle.Strikeout);
+        private DialogProduct dlgProduct = new DialogProduct();
+        private DialogHistory dlgHistory = new DialogHistory();
+        private DialogRegular dlgRegular = new DialogRegular();
+        private DialogAdjust dlgAdjust = new DialogAdjust();
+        private DialogPurchases dlgPurchases = new DialogPurchases();
+        private DialogTags dlgTags = new DialogTags();
+        private DialogReverse dlgReverse = new DialogReverse();
+        private DialogFiscal dlgFiscal = new DialogFiscal();
+        private DialogFiscalize dlgFiscalize = new DialogFiscalize();
 
         private PaymentController m_PaymentController = PaymentController.Instance;
         private APIAuthResult m_AuthResult;
         private List<LinkedCard> m_LinkedCards;
         private List<PortInfo> portInfos = new List<PortInfo>();
-        private string divider = new string('=', 93);
 
         public MainForm()
         {
@@ -54,36 +59,40 @@ namespace Example
             m_PaymentController.TransactionStartedEvent += onTransactionStarted;
             m_PaymentController.TransactionFinishedEvent += onPaymentFinished;
             m_PaymentController.ReverseEvent += onReverseEvent;
+
+            dlgProduct.FormClosing += DlgProduct_FormClosing;
+            dlgProduct.Logger = delegate (string s_log) { log(s_log); };
+
+            dlgHistory.Log = delegate (string s_log) { log(s_log); };
+            dlgHistory.LogExtended = log;
+            dlgHistory.CheckCredentials = checkCredentials;
+            dlgHistory.BuildInvoice = delegate (Transaction transaction) 
+            {
+                if (m_AuthResult != null)
+                    return Utils.BuildInvoice(m_AuthResult.Account, transaction);
+                return "";
+            };
+
+            dlgRegular.FormClosing += DlgRegular_FormClosing;
+
+            dlgAdjust.Log = delegate (string s_log) { log(s_log); };
+            dlgAdjust.CheckCredentials = checkCredentials;
+
+            dlgPurchases.FormClosing += DlgPurchases_FormClosing;
+            dlgTags.FormClosing += DlgTags_FormClosing;
+
+            dlgReverse.Reverse = reversePayment;
+
+            dlgFiscal.Log = delegate (string s_log) { log(s_log); };
+            dlgFiscal.CheckCreadentials = checkCredentials;
+
+            dlgFiscalize.Log = delegate (string s_log) { log(s_log); };
+            dlgFiscalize.CheckCreadentials = checkCredentials;
         }
 
         private void initControls()
         {
-            cbl_RepeatType.Items.AddRange(Enum.GetValues(typeof(RepeatType)).Cast<object>().ToArray());
-            cbl_End.Items.AddRange(Enum.GetValues(typeof(EndType)).Cast<object>().ToArray());
-
-            dtp_StartDate.MinDate = DateTime.Today;
-            dtp_EndDate.MinDate = DateTime.Today;
-
-            dtp_Time.Format = DateTimePickerFormat.Custom;
-            dtp_Time.CustomFormat = "HH:mm";
-            dtp_Time.ShowUpDown = true;
-
-            cbl_Month.Items.AddRange(System.Globalization.CultureInfo.CurrentUICulture.DateTimeFormat.MonthNames);
-            cbl_DayOfWeek.Items.AddRange(System.Globalization.CultureInfo.CurrentUICulture.DateTimeFormat.DayNames);
-            cbl_Month.SelectedIndex = 0;
-
-            int countOfDays = DateTime.DaysInMonth(1980, cbl_Month.SelectedIndex + 1);
-            object[] days = new object[countOfDays + 1];
-            for (int i = 0; i < countOfDays; i++)
-                days[i] = (i + 1).ToString();
-            days[countOfDays] = "Last day of month";
-            cbl_Day.Items.AddRange(days);
-
-            cbl_RepeatType.SelectedIndex = 0;
-            cbl_End.SelectedIndex = 0;
-            cbl_QMonth.SelectedIndex = 0;
-            cbl_DayOfWeek.SelectedIndex = 0;
-            cbl_Day.SelectedIndex = countOfDays;
+            cb_Product.Enabled = false;
         }
 
         private void checkCredentials()
@@ -146,14 +155,14 @@ namespace Example
             paymentContext.Amount = decimal.Parse(edt_Amount.Text);
             paymentContext.Currency = rb_RUB.Checked ? Currency.RUB : Currency.VND;
             paymentContext.Description = edt_Description.Text;
-            paymentContext.ReceiptEmail = "test@test.email";
-            paymentContext.ReceiptPhone = "+71234567891";
+            paymentContext.ReceiptEmail = edt_Email.Text;
+            paymentContext.ReceiptPhone = edt_Phone.Text;
             paymentContext.ExtID = ExtID;
 
 
-            if (cbTestPurchases.Checked)
+            if (cb_Purchases.Checked)
             {
-               List<Purchase> purchases = Utils.GetPurchasesFromJson(txtJson.Text);
+               List<Purchase> purchases = dlgPurchases.Purchases;
 
                 if (purchases == null)
                 {
@@ -164,7 +173,21 @@ namespace Example
                     foreach (Purchase p in purchases)
                         paymentContext.PutPurchase(p);
                 }
+            }
 
+            if (cb_Tags.Checked)
+            {
+                var tags = dlgTags.Tags;
+
+                if (tags == null)
+                {
+                    MessageBox.Show("Couldn't parse tags!");
+                }
+                else
+                {
+                    foreach (var tag in tags)
+                        paymentContext.PutInvoiceTag(tag.Key, tag.Value);
+                }
             }
 
             if (rb_Card.Checked)
@@ -186,6 +209,10 @@ namespace Example
                 paymentContext.Method = PaymentMethod.OuterCard;
             else if (rb_LinkedCard.Checked)
             {
+
+                APIReadLinkedCardsResult result = PaymentController.Instance.GetLinkedCards();
+                if (result.ErrorCode == 0)
+                    m_LinkedCards = result.LinkedCards;
                 paymentContext.Method = PaymentMethod.LinkedCard;
                 if (m_LinkedCards != null && m_LinkedCards.Count > 0)
                 {
@@ -238,70 +265,86 @@ namespace Example
             }
             */
 
+            
             if (hasProduct)
             {
-                paymentContext.PaymentProductCode = PRODUCT_CODE;
-                var paymentProductTextData = new Dictionary<string, string>(2);
-                paymentProductTextData.Add(PRODUCT_FIELD_1_CODE, edt_Field1.Text);
-                var paymentProductImageData = new Dictionary<string, byte[]>(1);
-                path = edt_Field2.Text;
-                if (!string.IsNullOrEmpty(path))
+                if (dlgProduct.CurrentProduct.Apply == PaymentProduct.PaymentType.None)
                 {
-                    if (File.Exists(path))
+                    log("ERROR : invalid product apply");
+                    return;
+                }
+                else if (isRegular)
+                {
+                    if (dlgProduct.CurrentProduct.Apply == PaymentProduct.PaymentType.Payment)
                     {
-                        try
-                        {
-                            paymentProductImageData.Add(PRODUCT_FIELD_2_CODE, File.ReadAllBytes(path));
-                        }
-                        catch (Exception e)
-                        {
-                            log(string.Format("ERROR : CANT READ IMAGE ({0})", PRODUCT_FIELD_2_CODE));
-                            return;
-                        }
+                        log("ERROR : invalid product apply");
+                        return;
+                    }
+                } 
+                else
+                {
+                    if (dlgProduct.CurrentProduct.Apply == PaymentProduct.PaymentType.Recurrent)
+                    {
+                        log("ERROR : invalid product apply");
+                        return;
                     }
                 }
-                paymentContext.PaymentProductTextDictionary = paymentProductTextData;
-                paymentContext.PaymentProductImageDictionary = paymentProductImageData;
+                
 
+                paymentContext.PaymentProductCode = dlgProduct.CurrentProduct.Code;
+                paymentContext.PaymentProductTextDictionary = dlgProduct.TextValues;
+                paymentContext.PaymentProductImageDictionary = dlgProduct.ImageValues;
+                if (dlgProduct.PreparedAmount != null)
+                {
+                    edt_Amount.Text = dlgProduct.PreparedAmount.ToString();
+                    paymentContext.Amount = dlgProduct.PreparedAmount.Value;
+                    log("Amount was changed according to product");
+                }
+                var email = dlgProduct.ReceiptEmail;
+                var phone = dlgProduct.ReceiptPhone;
+                if (email != null)
+                {
+                    edt_Email.Text = email;
+                    paymentContext.ReceiptEmail = email;
+                    log("Receipt notification data was changed according to product");
+                }
+                if (phone != null)
+                {
+                    edt_Phone.Text = phone;
+                    paymentContext.ReceiptPhone = phone;
+                    log("Receipt notification data was changed according to product");
+                }
             }
 
             if (isRegular)
             {
-                RegularPaymentContext regPaymentContext = (paymentContext as RegularPaymentContext);
+                RegularPaymentContext regPaymentContext = paymentContext as RegularPaymentContext;
 
-                regPaymentContext.PaymentRepeatType = (RepeatType)cbl_RepeatType.SelectedIndex;
-                regPaymentContext.PaymentEndType = (EndType)cbl_End.SelectedIndex;
-                regPaymentContext.StartDate = dtp_StartDate.Value;
-                regPaymentContext.EndDate = dtp_EndDate.Value;
-                regPaymentContext.RepeatCount = int.Parse(edt_RepeatCount.Text);
-                regPaymentContext.MonthOfQuarter = cbl_QMonth.SelectedIndex + 1;
-                regPaymentContext.Month = cbl_Month.SelectedIndex + 1;
-
-                try
-                {
-                    regPaymentContext.Day = int.Parse(cbl_Day.Text);
-                }
-                catch (FormatException ex)
-                {
-                    regPaymentContext.Day = RegularPaymentContext.LAST_DAY_OF_MONTH;
-                }
-
-                regPaymentContext.DayOfWeek = cbl_DayOfWeek.SelectedIndex;
-                regPaymentContext.Hour = dtp_Time.Value.Hour;
-                regPaymentContext.Minute = dtp_Time.Value.Minute;
-                if (string.IsNullOrEmpty(edt_Email.Text) && string.IsNullOrEmpty(edt_Phone.Text))
+                if (string.IsNullOrEmpty(regPaymentContext.ReceiptEmail)  && string.IsNullOrEmpty(regPaymentContext.ReceiptPhone))
                 {
                     log("ERROR : email or phone required");
                     return;
                 }
-                regPaymentContext.ReceiptEmail = edt_Email.Text;
-                regPaymentContext.ReceiptPhone = edt_Phone.Text;
-
-                if (!string.IsNullOrEmpty(edt_ArbitraryDays.Text))
+                
+                if (hasProduct && dlgProduct.CurrentProduct.RecurrentMode == PaymentProduct.ProductRecurrentMode.Managed)
                 {
-                    string[] days = edt_ArbitraryDays.Text.Split(new char[] { ';' });
-                    foreach (string day in days)
-                        regPaymentContext.ArbitraryDays.Add(DateTime.ParseExact(day.Trim(), "dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture));
+                    regPaymentContext.Managed = true;
+                    regPaymentContext.PaymentRepeatType = RepeatType.DelayedOnce;
+                    regPaymentContext.PaymentEndType = EndType.ByQuantity;
+                    regPaymentContext.RepeatCount = 1;
+                    regPaymentContext.StartDate = DateTime.Now;
+                    regPaymentContext.EndDate = DateTime.Now;
+                    regPaymentContext.ArbitraryDays = null;
+                    regPaymentContext.Day = 0;
+                    regPaymentContext.DayOfWeek = 0;
+                    regPaymentContext.Hour = 0;
+                    regPaymentContext.Minute = 0;
+                    regPaymentContext.Month = 0;
+                    log("Recurrent payment is managed by host!");
+                }
+                else
+                {
+                    dlgRegular.SetContextValues(regPaymentContext);
                 }
             }
 
@@ -327,8 +370,8 @@ namespace Example
             try
             {
                 m_PaymentController.StartPayment(paymentContext);
-                log(divider);
-                log(string.Format("STARTING NEW PAYMENT : {0}{1}", Environment.NewLine, Newtonsoft.Json.JsonConvert.SerializeObject(paymentContext, Newtonsoft.Json.Formatting.Indented)));
+                log(DIVIDER);
+                log(string.Format("STARTING NEW PAYMENT : {0}{1}", Environment.NewLine, JsonConvert.SerializeObject(paymentContext, Formatting.Indented)));
             }
             catch (InvalidOperationException e)
             {
@@ -343,23 +386,15 @@ namespace Example
 
             try
             {
-                String trID = edt_ReverseID.Text;
-                ReverseMode mode = rb_Cancel.Checked ? ReverseMode.Cancel : ReverseMode.Return;
-                decimal? amountToReverse = string.IsNullOrEmpty(edt_ReverseAmount.Text) ? null : (decimal?)decimal.Parse(edt_ReverseAmount.Text);
-                string receiptEmail = "test@test.email";
-                string receiptPhone = "+71234567891";
-                var reverseContext = new ReversePaymentContext()
+                var reverseContext = new ReversePaymentContext();
+                dlgReverse.SetContextValues(reverseContext);
+                reverseContext.ReceiptEmail = edt_Email.Text;
+                reverseContext.ReceiptPhone = edt_Phone.Text;
+                reverseContext.ExtID = ExtID;
+
+                if (cb_Purchases.Checked)
                 {
-                    TransactionID = trID,
-                    Mode = mode,
-                    AmountToReverse = amountToReverse,
-                    ReceiptEmail = receiptEmail,
-                    ReceiptPhone = receiptPhone,
-                    ExtID = MainForm.ExtID
-                };
-                if (cbTestPurchases.Checked)
-                {
-                    List<Purchase> purchases = Utils.GetPurchasesFromJson(txtJson.Text);
+                    List<Purchase> purchases = dlgPurchases.Purchases;
 
                     if (purchases == null)
                     {
@@ -372,9 +407,25 @@ namespace Example
                     }
 
                 }
+
+                if (cb_Tags.Checked)
+                {
+                    var tags = dlgTags.Tags;
+
+                    if (tags == null)
+                    {
+                        MessageBox.Show("Couldn't parse tags!");
+                    }
+                    else
+                    {
+                        foreach (var tag in tags)
+                            reverseContext.PutInvoiceTag(tag.Key, tag.Value);
+                    }
+                }
+
                 m_PaymentController.StartReverse(reverseContext);
-                log(divider);
-                log(string.Format("{0} PAYMENT : {1}{2}", mode == ReverseMode.Cancel ? "CANCEL" : "RETURN", Environment.NewLine, trID));
+                log(DIVIDER);
+                log(string.Format("{0} PAYMENT : {1}{2}", reverseContext.Mode == ReverseMode.Cancel ? "CANCEL" : "RETURN", Environment.NewLine, reverseContext.TransactionID));
             }
             catch (InvalidOperationException e)
             {
@@ -382,136 +433,11 @@ namespace Example
                 return;
             }
         }
-
-        private void adjustPayment()
-        {
-            log(divider);
-            log("STARTING ADJUST");
-
-            checkCredentials();
-            
-            Task adjustTask = Task.Factory.StartNew(() =>
-            {
-                APIResult result = null;
-                if (rb_AdjustSimple.Checked)
-                {
-                    result = PaymentController.Instance.Adjust(edt_AdjustTrId.Text, edt_AdjustEmail.Text, edt_AdjustPhone.Text);
-                }
-                else if (rb_AdjustRegular.Checked)
-                {
-                    result = PaymentController.Instance.AdjustRegular(edt_AdjustTrId.Text, edt_AdjustEmail.Text, edt_AdjustPhone.Text);
-                }
-                else if (rb_AdjustReverse.Checked)
-                {
-                    result = PaymentController.Instance.AdjustReverse(edt_AdjustTrId.Text, edt_AdjustEmail.Text, edt_AdjustPhone.Text);
-                }
-                if (result != null && result.ErrorCode == 0)
-                    log("ADJUST FINISHED OK");
-                else
-                    log(string.Format("ADJUST ERROR : {0}({1})", (result == null ? "null" : result.ErrorMessage), (result == null ? "null" : result.ErrorCode.ToString())));
-                log(divider);
-            });            
-        }
-
-        private void getHistory()
-        {
-            checkCredentials();
-            if (string.IsNullOrEmpty(edt_HistoryTrID.Text.Trim()))
-            {
-                int page = 0;
-                try
-                {
-                    page = int.Parse(edt_HistoryPage.Text);
-                }
-                catch (FormatException ex)
-                {
-                }
-
-                log(divider);
-                log(string.Format("GET HISTORY PAGE #{0} :", page));
-
-                Task getHistoryTask = Task.Factory.StartNew(() =>
-                {
-                    APIGetHistoryResult result = PaymentController.Instance.GetHistory(page);
-                    if (result != null && result.ErrorCode == 0)
-                    {
-                        List<Transaction> transactions = new List<Transaction>();
-                        if (result.InProcessTransactions != null)
-                            transactions.AddRange(result.InProcessTransactions);
-                        if (result.Transactions != null)
-                            transactions.AddRange(result.Transactions);
-                        log(string.Format("{0,-18}  {1,-25} {2,-10} {3}", "DateTime", "Description", "Balance", "ID"));
-                        if (transactions != null)
-                            foreach (Transaction transaction in transactions)
-                            {
-                                Color color = Color.Black;
-                                switch (transaction.DisplayMode)
-                                {
-                                    case DisplayMode.Success:
-                                        color = Color.Green;
-                                        break;
-                                    case DisplayMode.Reverse:
-                                    case DisplayMode.Reversed:
-                                        color = Color.SlateGray;
-                                        break;
-                                    case DisplayMode.Declined:
-                                        color = Color.OrangeRed;
-                                        break;
-                                }
-                                string description = transaction.Description;
-                                if (result.InProcessTransactions != null && result.InProcessTransactions.Contains(transaction))
-                                    description += "    (IN PROCESS)";
-                                log(string.Format("{0,-17:dd.MM.yyyy hh:mm}   {1,-25} {2,-10} {3}",
-                                    transaction.Date, description, string.Format(transaction.AmountFormat, transaction.Balance), transaction.ID),
-                                    color, !transaction.Canceled);
-                            }
-                    }
-                    else
-                    {
-                        log(string.Format("GET HISTORY ERROR : {0}({1})", (result == null ? "null" : result.ErrorMessage), (result == null ? "null" : result.ErrorCode.ToString())));
-                    }
-
-                    log(divider);
-                });
-            }
-            else
-            {
-                string transactionID = edt_HistoryTrID.Text.Trim();
-                log(divider);
-                log(string.Format("GET TRANSACTION BY ID : {0}", transactionID));
-
-                Task getHistoryTask = Task.Factory.StartNew(() =>
-                {
-                    APIGetHistoryResult result = PaymentController.Instance.GetTransactionByID(transactionID);
-                    if (result != null && result.ErrorCode == 0)
-                    {
-                        List<Transaction> transactions = new List<Transaction>();
-                        if (result.InProcessTransactions != null)
-                            transactions.AddRange(result.InProcessTransactions);
-                        if (result.Transactions != null)
-                            transactions.AddRange(result.Transactions);
-                        if (transactions != null && transactions.Count == 1)
-                        {
-                            log(JsonConvert.SerializeObject(transactions[0], Formatting.Indented));
-                            log(Utils.BuildInvoice(m_AuthResult.Account, transactions[0]));
-                        }
-                        else
-                            log("Transaction not found or not unique");
-                    }
-                    else
-                    {
-                        log(string.Format("GET TRANSACTION BY ID ERROR : {0}({1})", (result == null ? "null" : result.ErrorMessage), (result == null ? "null" : result.ErrorCode.ToString())));
-                    }
-                    
-                    log(divider);
-                });
-            }
-        }
-
+        
         private void auth()
         {
             checkCredentials();
-            log(divider);
+            log(DIVIDER);
             log("AUTH");
 
             Task authTask = Task.Factory.StartNew(() =>
@@ -520,14 +446,22 @@ namespace Example
                 m_AuthResult = result;
                 if (result != null && result.ErrorCode == 0)
                 {
-                    m_LinkedCards = m_AuthResult.Account.LinkedCards;
-                    log(Newtonsoft.Json.JsonConvert.SerializeObject(result.Account, Newtonsoft.Json.Formatting.Indented));
+                    getLinkedCards();
+
+                    dlgProduct.Products = m_AuthResult.Products;
+                    cb_Product.Invoke((MethodInvoker)delegate
+                    {
+                        cb_Product.Checked = false;
+                        cb_Product.Enabled = m_AuthResult.Products != null && m_AuthResult.Products.Count > 0;
+                    });
+
+                    log(JsonConvert.SerializeObject(result.Account, Formatting.Indented));
                 }
                 else
                 {
                     log(string.Format("AUTH ERROR : {0}({1})", (result == null ? "null" : result.ErrorMessage), (result == null ? "null" : result.ErrorCode.ToString())));
                 }
-                log(divider);
+                log(DIVIDER);
             });
         }
 
@@ -557,7 +491,7 @@ namespace Example
             try
             {
                 m_PaymentController.AddLinkedCard(currency, acquirerCode);
-                log(divider);
+                log(DIVIDER);
                 log("STARTING LINKED CARD ATTACH");
             }
             catch (InvalidOperationException e)
@@ -570,7 +504,7 @@ namespace Example
         private void removeLinkedCard()
         {
             checkCredentials();
-            log(divider);
+            log(DIVIDER);
             if (m_LinkedCards != null && m_LinkedCards.Count > 0)
             {
                 int selectedCardIndex = Utils.ShowDialog(m_LinkedCards.ConvertAll(c => c.Alias), "Select card");
@@ -611,7 +545,7 @@ namespace Example
         private void getLinkedCards()
         {
             checkCredentials();
-            log(divider);
+            log(DIVIDER);
             Task.Factory.StartNew(() =>
             {
                 log("GET LINKED CARDS");
@@ -621,7 +555,7 @@ namespace Example
                     if (result != null && result.ErrorCode == 0)
                     {
                         m_LinkedCards = result.LinkedCards;
-                        log(Newtonsoft.Json.JsonConvert.SerializeObject(result, Newtonsoft.Json.Formatting.Indented));
+                        log(JsonConvert.SerializeObject(result, Formatting.Indented));
                     }
                     else
                         log(string.Format("GET LINKED CARDS ERROR : {0}({1})", (result == null ? "null" : result.ErrorMessage), (result == null ? "null" : result.ErrorCode.ToString())));
@@ -653,7 +587,7 @@ namespace Example
 
         private bool onScheduleCreationFailed(PaymentError error, string description = null)
         {
-            log(String.Format("PAYMENT CREATION FAILED : {0}({1})", error, description ?? ""));
+            log(string.Format("PAYMENT CREATION FAILED : {0}({1})", error, description ?? ""));
             return MessageBox.Show("Payment creation failed. Retry?", "Payment creation failed", MessageBoxButtons.YesNo) == DialogResult.Yes;
         }
         
@@ -668,7 +602,7 @@ namespace Example
 
         private bool onCancellationTimeout()
         {
-            log(String.Format("CANCELLATION TIMEOUT"));
+            log(string.Format("CANCELLATION TIMEOUT"));
             return MessageBox.Show("Cancellation not available. Perform refund?", "Cancellation failed", MessageBoxButtons.YesNo) == DialogResult.Yes;
         }
 
@@ -683,7 +617,7 @@ namespace Example
             log(string.Format("ERROR : {0} ({1})", error.ToString(), errorMsg ?? ""));
         }
 
-        private void onTransactionStarted(String transactionID)
+        private void onTransactionStarted(string transactionID)
         {
             log(string.Format("TRANSACTION {0} STARTED", transactionID));
         }
@@ -695,34 +629,34 @@ namespace Example
                 if (result.ScheduleItem != null)
                 {
                     log("PAYMENT FINISHED :");
-                    log(Newtonsoft.Json.JsonConvert.SerializeObject(result.ScheduleItem, Newtonsoft.Json.Formatting.Indented));
+                    log(JsonConvert.SerializeObject(result.ScheduleItem, Formatting.Indented));
                 }
                 else if (result.TransactionItem != null)
                 {
                     Transaction resultTran = result.TransactionItem;
 
-                    if (cbTestServerFisc.Checked) { 
+                    if (cb_TestServerFisc.Checked) { 
                         resultTran = Task.Factory.StartNew<Transaction>(() =>
                         {
                             var transaction = result.TransactionItem;
-                            var uptime = new DateTime();
+                            var uptime = DateTime.Now;
                             var timeout = new TimeSpan(0, 1, 0);
                             int i = 0;
                             while (transaction.FiscalInfo == null || (transaction.FiscalInfo.FiscalStatus != FiscalStatus.Success && transaction.FiscalInfo.FiscalStatus != FiscalStatus.Failure))
                             {
-                                if (new DateTime() - uptime > timeout)
+                                if (DateTime.Now - uptime > timeout)
                                 {
                                     log("Cancelling fiscal data request by timeout");
                                     break;
                                 }
                                 Thread.Sleep(5000);
-                                var statusRequestResult = PaymentController.Instance.GetTransactionByID(transaction.ID);
+                                var statusRequestResult = PaymentController.Instance.TryGetFiscalInfo(transaction.ID);
                                 log("Get fiscal data attempt " + ++i);
                                 if (statusRequestResult != null && statusRequestResult.ErrorCode == 0)
                                 {
-                                    if (statusRequestResult.Transactions != null && statusRequestResult.Transactions.Count == 1)
+                                    if (statusRequestResult.Transaction != null)
                                     {
-                                        transaction = statusRequestResult.Transactions[0];
+                                        transaction = statusRequestResult.Transaction;
                                         log(JsonConvert.SerializeObject(transaction.FiscalInfo, Formatting.Indented));
                                     }
                                     else
@@ -741,9 +675,9 @@ namespace Example
                             emvdata += string.Format("{0}: {1}\n", key, resultTran.EMVData[key]);
 
                     log("PAYMENT FINISHED : " + Environment.NewLine + JsonConvert.SerializeObject(resultTran, Formatting.Indented));
-                    log(divider);
+                    log(DIVIDER);
 
-                    if (cbTestServerFisc.Checked) log(Utils.BuildInvoice(m_AuthResult.Account, resultTran));
+                    if (cb_TestServerFisc.Checked) log(Utils.BuildInvoice(m_AuthResult.Account, resultTran));
                     StringBuilder slipBuilder = new StringBuilder();
                     slipBuilder.Append("___________SLIP___________\n");
                     if (m_AuthResult != null && m_AuthResult.ErrorCode == 0)
@@ -785,7 +719,7 @@ namespace Example
                 }
                 else if (result.AttachedCard != null)
                 {
-                    log("ATTACH FINISHED :" + Environment.NewLine + Newtonsoft.Json.JsonConvert.SerializeObject(result, Newtonsoft.Json.Formatting.Indented));
+                    log("ATTACH FINISHED :" + Environment.NewLine + JsonConvert.SerializeObject(result, Formatting.Indented));
                     getLinkedCards();
                 }
                 else
@@ -793,7 +727,7 @@ namespace Example
                     log("PAYMENT FINISHED");
                 }
 
-                log(divider);
+                log(DIVIDER);
             }
             catch (Exception ex)
             {
@@ -832,7 +766,7 @@ namespace Example
             }
 
             //DEBUG
-            m_PaymentController.Logger = delegate (string s_log) {  log(s_log, Color.Blue); };
+            m_PaymentController.Logger = delegate (string s_log) { log(s_log, Color.Blue); };
             //
 
             m_PaymentController.Enable();
@@ -850,7 +784,8 @@ namespace Example
 
         private void btn_Reverse_Click(object sender, EventArgs e)
         {
-            reversePayment();
+            if (!dlgReverse.Visible)
+                dlgReverse.ShowDialog();
         }
 
         private void btn_ClearLog_Click(object sender, EventArgs e)
@@ -860,85 +795,8 @@ namespace Example
 
         private void cb_Regular_CheckedChanged(object sender, EventArgs e)
         {
-            gb_Regular.Enabled = cb_Regular.Checked;
-        }
-
-        private void cbl_RepeatType_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            RepeatType repeatType = (RepeatType)cbl_RepeatType.SelectedIndex;
-
-            var controls = gb_Regular.Controls;
-            foreach (Control control in controls)
-                control.Enabled = false;
-
-            cbl_RepeatType.Enabled = true;
-            cbl_End.Enabled = true;
-            dtp_StartDate.Enabled = true;
-            dtp_Time.Enabled = true;
-            edt_Email.Enabled = true;
-            edt_Phone.Enabled = true;
-            lbl_Repeat.Enabled = true;
-            lbl_End.Enabled = true;
-            lbl_StartDate.Enabled = true;
-            lbl_Time.Enabled = true;
-            lbl_Email.Enabled = true;
-            lbl_Phone.Enabled = true;
-
-            switch (repeatType)
-            {
-                case RepeatType.DelayedOnce:
-                    break;
-                case RepeatType.Weekly:
-                    cbl_DayOfWeek.Enabled = true;
-                    lbl_DayOfWeek.Enabled = true;
-                    break;
-                case RepeatType.Monthly:
-                    cbl_Day.Enabled = true;
-                    lbl_Day.Enabled = true;
-                    break;
-                case RepeatType.Quarterly:
-                    cbl_QMonth.Enabled = true;
-                    cbl_Day.Enabled = true;
-                    lbl_QMonth.Enabled = true;
-                    lbl_Day.Enabled = true;
-                    break;
-                case RepeatType.Annual:
-                    cbl_Month.Enabled = true;
-                    cbl_Day.Enabled = true;
-                    lbl_Month.Enabled = true;
-                    lbl_Day.Enabled = true;
-                    break;
-                case RepeatType.ArbitraryDates:
-                    edt_ArbitraryDays.Enabled = true;
-                    dtp_StartDate.Enabled = false;
-                    cbl_End.Enabled = false;
-                    edt_RepeatCount.Enabled = false;
-                    lbl_StartDate.Enabled = false;
-                    lbl_ArbitraryDays.Enabled = true;
-                    lbl_End.Enabled = false;
-                    lbl_RepeatCount.Enabled = false;
-                    break;
-
-            }
-        }
-
-        private void cbl_End_EnabledChanged(object sender, EventArgs e)
-        {
-            EndType endType = (EndType)cbl_End.SelectedIndex;
-
-            edt_RepeatCount.Enabled = cbl_End.Enabled ? endType == EndType.ByQuantity : false;
-            dtp_EndDate.Enabled = cbl_End.Enabled ? endType == EndType.AtDay : false;
-            lbl_RepeatCount.Enabled = cbl_End.Enabled ? endType == EndType.ByQuantity : false;
-            lbl_EndDate.Enabled = cbl_End.Enabled ? endType == EndType.AtDay : false;
-        }
-
-        private void cbl_End_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            EndType endType = (EndType)cbl_End.SelectedIndex;
-            edt_RepeatCount.Enabled = endType == EndType.ByQuantity;
-            lbl_RepeatCount.Enabled = endType == EndType.ByQuantity;
-            dtp_EndDate.Enabled = endType == EndType.AtDay;
-            lbl_EndDate.Enabled = endType == EndType.AtDay;
+            if (cb_Regular.Checked)
+                dlgRegular.ShowDialog();
         }
 
         private void cb_Usb_CheckedChanged(object sender, EventArgs e)
@@ -958,17 +816,33 @@ namespace Example
 
         private void btn_Adjust_Click(object sender, EventArgs e)
         {
-            adjustPayment();
+            if (!dlgAdjust.Visible)
+                dlgAdjust.ShowDialog();
         }
 
         private void btn_History_Click(object sender, EventArgs e)
         {
-            getHistory();
+            if (!dlgHistory.Visible)
+                dlgHistory.ShowDialog();
         }
 
         private void cb_Product_CheckedChanged(object sender, EventArgs e)
         {
-            gb_Product.Enabled = cb_Product.Checked;
+            if (cb_Product.Checked)
+                dlgProduct.ShowDialog();
+        }
+
+
+        private void cb_Purchases_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cb_Purchases.Checked)
+                dlgPurchases.ShowDialog();
+        }
+   
+        private void cb_Tags_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cb_Tags.Checked)
+                dlgTags.ShowDialog();
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -999,6 +873,18 @@ namespace Example
         private void btn_Remove_Click(object sender, EventArgs e)
         {
             removeLinkedCard();
+        }
+        
+        private void btn_SubmitFiscal_Click(object sender, EventArgs e)
+        {
+            if (!dlgFiscal.Visible)
+                dlgFiscal.ShowDialog();
+        }
+        
+        private void btn_Fiscalize_Click(object sender, EventArgs e)
+        {
+            if (!dlgFiscalize.Visible)
+                dlgFiscalize.ShowDialog();
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -1078,6 +964,30 @@ namespace Example
                 catch { }
             }).Start();
         }
+
+        private void DlgProduct_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (dlgProduct.CurrentProduct == null)
+                cb_Product.Checked = false;
+        }
+
+        private void DlgRegular_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (dlgRegular.Cancelled)
+                cb_Regular.Checked = false;
+        }
+        
+        private void DlgPurchases_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (dlgPurchases.Cancelled)
+                cb_Purchases.Checked = false;
+        }
+
+        private void DlgTags_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (dlgTags.Cancelled)
+                cb_Purchases.Checked = false;
+        }
         #endregion
 
         public class PortInfo
@@ -1100,6 +1010,17 @@ namespace Example
                 result[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
             }
             return result;
+        }
+
+        private void btnEnableReaderSound_Click(object sender, EventArgs e)
+        {
+            PaymentController.Instance.SetSoundEnabled(true);
+        }
+
+        private void btnDisableReaderSound_Click(object sender, EventArgs e)
+        {
+            PaymentController.Instance.SetSoundEnabled(false);
+
         }
     }
 }

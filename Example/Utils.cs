@@ -21,7 +21,10 @@ namespace Example
             { Purchase.VAT_NA, 0 },
             { Purchase.VAT_0, 0 },
             { Purchase.VAT_10, 0.1m },
-            { Purchase.VAT_18, 0.18m }
+            { Purchase.VAT_18, 0.18m },
+            { Purchase.VAT_20, 0.2m },
+            { Purchase.VAT_110, 0.1m },
+            { Purchase.VAT_120, 0.2m }
         };
 
         public static int ShowDialog(List<string> items, string title)
@@ -207,16 +210,23 @@ namespace Example
             decimal cashGot = RoundClassic(transaction.AmountCashGot, S_DECIMALS);
             var taxMode = transaction.TaxMode;
             var purchases = transaction.Purchases;
+            List<Transaction.Product> products = transaction.Products;
+
             var taxCalcs = new Dictionary<string, decimal>()
             {
                 { Purchase.VAT_NA, 0 },
                 { Purchase.VAT_0, 0 },
                 { Purchase.VAT_10, 0 },
-                { Purchase.VAT_18, 0 }
+                { Purchase.VAT_18, 0 },
+                { Purchase.VAT_20, 0 },
+                { Purchase.VAT_110, 0 },
+                { Purchase.VAT_120, 0 }
             };
-            bool hasPurchases = purchases != null && purchases.Count > 0;
 
-            if (hasPurchases && !string.IsNullOrWhiteSpace(transaction.Description))
+            bool hasPurchases = purchases != null && purchases.Count > 0;
+            bool hasProducts = products != null && products.Count > 0;
+
+            if ((hasPurchases || hasProducts) && !string.IsNullOrWhiteSpace(transaction.Description))
                 invoiceBuilder.AppendLine(transaction.Description);
             invoiceBuilder.AppendLine(divider);
 
@@ -226,10 +236,14 @@ namespace Example
                 {
                     var price = RoundClassic(purchase.Price, S_DECIMALS);
                     var quantity = RoundClassic(purchase.Quantity, Q_DECIMALS);
-                    var total = RoundClassic(price * quantity, S_DECIMALS);
-                    invoiceTotal += total;
-                    AppendKeyValue(invoiceBuilder, lineWidth, purchase.Title, string.Format("{0,5:F3}x{1,5:F2}={2,5:F2}", quantity, price, total));
-                    var purchaseTaxes = CalculateTaxes(taxMode, total, purchase.TaxCode);
+                    var calcTotal = RoundClassic(price * quantity, S_DECIMALS);
+                    var realTotal = purchase.TitleAmount == null ? calcTotal : RoundClassic(purchase.TitleAmount.Value, S_DECIMALS);
+                    invoiceTotal += realTotal;
+                    AppendKeyValue(invoiceBuilder, lineWidth, purchase.Title ?? "", string.Format("{0,5:F3}x{1,5:F2}={2,5:F2}", quantity, price, realTotal));
+                    if (realTotal != calcTotal)
+                        AppendKeyValue(invoiceBuilder, lineWidth, "НАДБАВКА", "=" + (realTotal - calcTotal));
+                    
+                    var purchaseTaxes = CalculateTaxes(taxMode, realTotal, purchase.TaxCode);
                     foreach (KeyValuePair<string, decimal> purchaseTax in purchaseTaxes)
                     {
                         string taxCode = purchaseTax.Key;
@@ -244,12 +258,81 @@ namespace Example
             else
             {
                 var description = transaction.Description;
+                if (hasProducts)
+                {
+                    var delimiter = new string[] { "\n" };
+                    StringBuilder descriptionBuilder = new StringBuilder();
+                    foreach (var nextProduct in transaction.Products)
+                    {
+                        descriptionBuilder.AppendLine(nextProduct.Description.TitleReceipt);
+                        List<string> fields = new List<string>();
+                        foreach (var field in nextProduct.Fields)
+                        {
+                            StringBuilder fieldBuilder = new StringBuilder();
+                            if (field.Description.PrintInReceipt && field.TextValue != null)
+                            {
+                                fieldBuilder.Clear();
+                                fieldBuilder.Append(field.Description.TitleReceipt);
+                                if (field.TextValue.Length + field.Description.TitleReceipt.Length < lineWidth && field.TextValue.Split(delimiter, StringSplitOptions.None).Length == 1)
+                                {
+                                    fieldBuilder.Append(new string(' ', lineWidth - (field.TextValue.Length + field.Description.TitleReceipt.Length)));
+                                    fieldBuilder.Append(field.TextValue);
+                                    fields.Add(fieldBuilder.ToString());
+                                }
+                                else
+                                {
+                                    fields.Add(fieldBuilder.ToString());
+                                    fieldBuilder.Clear();
+                                    if (field.TextValue.Length < lineWidth && field.TextValue.Split(delimiter, StringSplitOptions.None).Length == 1)
+                                    {
+                                        fieldBuilder.Append(new string(' ', lineWidth - field.TextValue.Length));
+                                        fieldBuilder.Append(field.TextValue);
+                                        fields.Add(fieldBuilder.ToString());
+                                    }
+                                    else
+                                    {
+                                        fields.Add(fieldBuilder.ToString());
+                                        string[] lines = field.TextValue.Split(delimiter, StringSplitOptions.None);
+                                        foreach (var line in lines)
+                                        {
+                                            fieldBuilder.Clear();
+                                            if (line.Length < lineWidth)
+                                            {
+                                                fieldBuilder.Append(new string(' ', lineWidth - line.Length));
+                                                fieldBuilder.Append(line);
+                                                fields.Add(fieldBuilder.ToString());
+                                            }
+                                            else
+                                            {
+                                                fields.Add(line);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        foreach (var field in fields)
+                            descriptionBuilder.AppendLine(field);
+                        description = descriptionBuilder.ToString().Trim();
+                    }
+                }
 
                 var price = tranAmount;
                 var quantity = RoundClassic(1, Q_DECIMALS);
                 var total = RoundClassic(price * quantity, S_DECIMALS);
                 invoiceTotal += total;
-                AppendKeyValue(invoiceBuilder, lineWidth, description, string.Format("{0,5:F3}x{1,5:F2}={2,5:F2}", quantity, price, total));
+
+                if (hasProducts)
+                {
+                    invoiceBuilder.AppendLine(description);
+                    string amount = string.Format("{0,5:F3}x{1,5:F2}={2,5:F2}", quantity, price, total);
+                    string spaces = "";
+                    if (amount.Length < lineWidth - 1)
+                        spaces = new string(' ', lineWidth - 1 - amount.Length);
+                    AppendKeyValue(invoiceBuilder, lineWidth, spaces, amount);
+                }
+                else
+                    AppendKeyValue(invoiceBuilder, lineWidth, description, string.Format("{0,5:F3}x{1,5:F2}={2,5:F2}", quantity, price, total));
                 taxCalcs = CalculateTaxes(taxMode, total, transaction.Taxes == null ? null : transaction.Taxes.Select(tt => tt.Code).ToList());
             }
             if (transaction.TaxContributions != null && transaction.TaxContributions.Count > 0)
@@ -271,7 +354,10 @@ namespace Example
             AppendKeyValue(invoiceBuilder, lineWidth, "Сумма без НДС", string.Format("{0:F2}", taxCalcs.ContainsKey(Purchase.VAT_NA) ? taxCalcs[Purchase.VAT_NA] : 0));
             AppendKeyValue(invoiceBuilder, lineWidth, "Сумма по НДС 0%", string.Format("{0:F2}", taxCalcs.ContainsKey(Purchase.VAT_0) ? taxCalcs[Purchase.VAT_0] : 0));
             AppendKeyValue(invoiceBuilder, lineWidth, "Сумма НДС 10%", string.Format("{0:F2}", taxCalcs.ContainsKey(Purchase.VAT_10) ? taxCalcs[Purchase.VAT_10] : 0));
+            AppendKeyValue(invoiceBuilder, lineWidth, "Сумма НДС 10/110", string.Format("{0:F2}", taxCalcs.ContainsKey(Purchase.VAT_110) ? taxCalcs[Purchase.VAT_110] : 0));
             AppendKeyValue(invoiceBuilder, lineWidth, "Сумма НДС 18%", string.Format("{0:F2}", taxCalcs.ContainsKey(Purchase.VAT_18) ? taxCalcs[Purchase.VAT_18] : 0));
+            AppendKeyValue(invoiceBuilder, lineWidth, "Сумма НДС 20%", string.Format("{0:F2}", taxCalcs.ContainsKey(Purchase.VAT_20) ? taxCalcs[Purchase.VAT_20] : 0));
+            AppendKeyValue(invoiceBuilder, lineWidth, "Сумма НДС 20/120", string.Format("{0:F2}", taxCalcs.ContainsKey(Purchase.VAT_120) ? taxCalcs[Purchase.VAT_120] : 0));
 
             if (transaction.FiscalInfo != null)
             {

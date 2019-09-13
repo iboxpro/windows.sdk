@@ -117,21 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="txtJson.Text" xml:space="preserve">
-    <value>{
-    "Purchases": [{
-        "Title": "Тестовый товар",
-        "Price": 1.0,
-        "Quantity": 1.0,
-        "TaxCode": ["VAT1800"]
-    }, {
-        "Title": "Тестовый товар 2",
-        "Price": 10.5,
-        "Quantity": 1.25,
-        "TaxCode": []
-    }]
-}</value>
-  </data>
   <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>84</value>
   </metadata>
