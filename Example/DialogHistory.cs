@@ -60,7 +60,7 @@ namespace Example
                                 transactions.AddRange(result.Transactions);
                             if (transactions != null)
                             {
-                                if (selected == rb_Page)
+                                if (selected == rb_Page || selected == rb_ExtID)
                                 {
                                     Log(string.Format("{0,-18}  {1,-25} {2,-10} {3}", "DateTime", "Description", "Balance", "ID"));
                                     foreach (Transaction transaction in transactions)
@@ -89,13 +89,23 @@ namespace Example
                                 }
                                 else
                                 {
-                                    if (transactions.Count == 1)
+                                    if (transactions == null || transactions.Count == 0)
+                                        Log("GET HISTORY ERROR : TRANSACTION IS NOT FOUND");
+                                    else if (transactions.Count == 1)
                                     {
                                         Log(JsonConvert.SerializeObject(transactions[0], Formatting.Indented));
                                         Log(BuildInvoice(transactions[0]));
                                     }
                                     else
-                                        Log("GET HISTORY ERROR : TRANSACTION NOT FOUND OR NOT UNIQUE");
+                                    {
+                                        Log("GET HISTORY ERROR : TRANSACTION IS NOT UNIQUE");
+                                        foreach (var transaction in transactions)
+                                        {
+                                            Log(MainForm.DIVIDER);
+                                            Log(JsonConvert.SerializeObject(transactions[0], Formatting.Indented));
+                                            Log(BuildInvoice(transactions[0]));
+                                        }
+                                    }
 
                                 }
                             }
@@ -155,6 +165,11 @@ namespace Example
             {
                 Log(string.Format("GET HISTORY BY RRN #{0} :", value));
                 return PaymentController.Instance.GetTransactionByRRN(value);
+            }
+            else if (selected == rb_ExtID)
+            {
+                Log(string.Format("GET HISTORY BY ExtID #{0} :", value));
+                return PaymentController.Instance.GetTransactionByExtID(value);
             }
             else
             {

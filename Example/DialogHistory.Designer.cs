@@ -39,12 +39,14 @@
             this.rb_TrID = new System.Windows.Forms.RadioButton();
             this.edt_Page = new System.Windows.Forms.TextBox();
             this.rb_Page = new System.Windows.Forms.RadioButton();
+            this.edt_ExtID = new System.Windows.Forms.TextBox();
+            this.rb_ExtID = new System.Windows.Forms.RadioButton();
             this.pan_History.SuspendLayout();
             this.SuspendLayout();
             // 
             // btn_OK
             // 
-            this.btn_OK.Location = new System.Drawing.Point(12, 126);
+            this.btn_OK.Location = new System.Drawing.Point(12, 146);
             this.btn_OK.Name = "btn_OK";
             this.btn_OK.Size = new System.Drawing.Size(150, 23);
             this.btn_OK.TabIndex = 1;
@@ -54,7 +56,7 @@
             // 
             // btn_Cancel
             // 
-            this.btn_Cancel.Location = new System.Drawing.Point(174, 126);
+            this.btn_Cancel.Location = new System.Drawing.Point(174, 146);
             this.btn_Cancel.Name = "btn_Cancel";
             this.btn_Cancel.Size = new System.Drawing.Size(150, 23);
             this.btn_Cancel.TabIndex = 2;
@@ -64,6 +66,8 @@
             // 
             // pan_History
             // 
+            this.pan_History.Controls.Add(this.edt_ExtID);
+            this.pan_History.Controls.Add(this.rb_ExtID);
             this.pan_History.Controls.Add(this.edt_RRN);
             this.pan_History.Controls.Add(this.rb_RRN);
             this.pan_History.Controls.Add(this.edt_Invoice);
@@ -74,7 +78,7 @@
             this.pan_History.Controls.Add(this.rb_Page);
             this.pan_History.Location = new System.Drawing.Point(12, 12);
             this.pan_History.Name = "pan_History";
-            this.pan_History.Size = new System.Drawing.Size(312, 100);
+            this.pan_History.Size = new System.Drawing.Size(312, 128);
             this.pan_History.TabIndex = 0;
             // 
             // edt_RRN
@@ -82,7 +86,7 @@
             this.edt_RRN.Location = new System.Drawing.Point(112, 80);
             this.edt_RRN.Name = "edt_RRN";
             this.edt_RRN.Size = new System.Drawing.Size(200, 20);
-            this.edt_RRN.TabIndex = 15;
+            this.edt_RRN.TabIndex = 7;
             // 
             // rb_RRN
             // 
@@ -90,7 +94,7 @@
             this.rb_RRN.Location = new System.Drawing.Point(0, 80);
             this.rb_RRN.Name = "rb_RRN";
             this.rb_RRN.Size = new System.Drawing.Size(64, 17);
-            this.rb_RRN.TabIndex = 14;
+            this.rb_RRN.TabIndex = 6;
             this.rb_RRN.TabStop = true;
             this.rb_RRN.Text = "By RRN";
             this.rb_RRN.UseVisualStyleBackColor = true;
@@ -100,7 +104,7 @@
             this.edt_Invoice.Location = new System.Drawing.Point(112, 54);
             this.edt_Invoice.Name = "edt_Invoice";
             this.edt_Invoice.Size = new System.Drawing.Size(200, 20);
-            this.edt_Invoice.TabIndex = 13;
+            this.edt_Invoice.TabIndex = 5;
             // 
             // rb_Invoice
             // 
@@ -108,7 +112,7 @@
             this.rb_Invoice.Location = new System.Drawing.Point(0, 54);
             this.rb_Invoice.Name = "rb_Invoice";
             this.rb_Invoice.Size = new System.Drawing.Size(97, 17);
-            this.rb_Invoice.TabIndex = 12;
+            this.rb_Invoice.TabIndex = 4;
             this.rb_Invoice.TabStop = true;
             this.rb_Invoice.Text = "By invoice num";
             this.rb_Invoice.UseVisualStyleBackColor = true;
@@ -118,7 +122,7 @@
             this.edt_TrID.Location = new System.Drawing.Point(112, 28);
             this.edt_TrID.Name = "edt_TrID";
             this.edt_TrID.Size = new System.Drawing.Size(200, 20);
-            this.edt_TrID.TabIndex = 11;
+            this.edt_TrID.TabIndex = 3;
             // 
             // rb_TrID
             // 
@@ -126,7 +130,7 @@
             this.rb_TrID.Location = new System.Drawing.Point(0, 28);
             this.rb_TrID.Name = "rb_TrID";
             this.rb_TrID.Size = new System.Drawing.Size(106, 17);
-            this.rb_TrID.TabIndex = 10;
+            this.rb_TrID.TabIndex = 2;
             this.rb_TrID.TabStop = true;
             this.rb_TrID.Text = "By transaction ID";
             this.rb_TrID.UseVisualStyleBackColor = true;
@@ -136,7 +140,7 @@
             this.edt_Page.Location = new System.Drawing.Point(112, 2);
             this.edt_Page.Name = "edt_Page";
             this.edt_Page.Size = new System.Drawing.Size(200, 20);
-            this.edt_Page.TabIndex = 9;
+            this.edt_Page.TabIndex = 1;
             this.edt_Page.Text = "1";
             // 
             // rb_Page
@@ -145,16 +149,34 @@
             this.rb_Page.Location = new System.Drawing.Point(0, 2);
             this.rb_Page.Name = "rb_Page";
             this.rb_Page.Size = new System.Drawing.Size(100, 17);
-            this.rb_Page.TabIndex = 8;
+            this.rb_Page.TabIndex = 0;
             this.rb_Page.TabStop = true;
             this.rb_Page.Text = "All by page num";
             this.rb_Page.UseVisualStyleBackColor = true;
+            // 
+            // edt_ExtID
+            // 
+            this.edt_ExtID.Location = new System.Drawing.Point(112, 106);
+            this.edt_ExtID.Name = "edt_ExtID";
+            this.edt_ExtID.Size = new System.Drawing.Size(200, 20);
+            this.edt_ExtID.TabIndex = 9;
+            // 
+            // rb_ExtID
+            // 
+            this.rb_ExtID.AutoSize = true;
+            this.rb_ExtID.Location = new System.Drawing.Point(0, 106);
+            this.rb_ExtID.Name = "rb_ExtID";
+            this.rb_ExtID.Size = new System.Drawing.Size(66, 17);
+            this.rb_ExtID.TabIndex = 8;
+            this.rb_ExtID.TabStop = true;
+            this.rb_ExtID.Text = "By ExtID";
+            this.rb_ExtID.UseVisualStyleBackColor = true;
             // 
             // DialogHistory
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(330, 158);
+            this.ClientSize = new System.Drawing.Size(326, 174);
             this.ControlBox = false;
             this.Controls.Add(this.pan_History);
             this.Controls.Add(this.btn_Cancel);
@@ -182,5 +204,7 @@
         private System.Windows.Forms.RadioButton rb_TrID;
         private System.Windows.Forms.TextBox edt_Page;
         private System.Windows.Forms.RadioButton rb_Page;
+        private System.Windows.Forms.TextBox edt_ExtID;
+        private System.Windows.Forms.RadioButton rb_ExtID;
     }
 }

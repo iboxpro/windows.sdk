@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Windows.Forms;
-
 using Ibox.Pro.SDK.External;
 using System.Drawing;
 using System.Linq;
@@ -12,18 +11,18 @@ using Ibox.Pro.SDK.External.Context;
 using System.Threading.Tasks;
 using System.Threading;
 using System.IO.Ports;
-
-using InTheHand.Net.Sockets;
-using InTheHand.Net;
 using Ibox.Pro.SDK.External.Entry;
 using Newtonsoft.Json;
 using System.Text;
+using InTheHand.Net;
+using InTheHand.Net.Sockets;
+using ibox.sdk.external.Exceptions;
 
 namespace Example
 {
     public partial class MainForm : Form
     {
-        public static readonly string DIVIDER = new string('=', 93);
+        public static string DIVIDER = new string('=', 100);
         private const string ExtID = "TEST_APP_DOT_NET";       
                
         private Font fntRegular = new Font("Courier New", 8.25F);
@@ -53,7 +52,6 @@ namespace Example
             m_PaymentController.ScheduleCreationFailedDelegate = onScheduleCreationFailed;
             m_PaymentController.SelectInputTypeDelegate = onRequestSelectInputType;
             m_PaymentController.CancellationTimeoutDelegate = onCancellationTimeout;
-
             m_PaymentController.ErrorEvent += onPaymentError;
             m_PaymentController.ReaderEvent += onReaderEvent;
             m_PaymentController.TransactionStartedEvent += onTransactionStarted;
@@ -92,12 +90,16 @@ namespace Example
 
         private void initControls()
         {
+
+            this.Text = "Example " + PaymentController.Instance.Version;
+            edt_ConnectionTimeout.Value = (decimal) m_PaymentController.ConnectionLostTimeout.GetValueOrDefault().TotalSeconds;
+            edt_ConnectionRetries.Value = m_PaymentController.ConnectionLostRestries;
             cb_Product.Enabled = false;
         }
 
         private void checkCredentials()
         {
-            if (!edt_Login.Text.Equals(m_PaymentController.Credentials.Email) || !edt_Password.Text.Equals(m_PaymentController.Credentials.Password))
+            if (!edt_Login.Text.Split(':')[0].Equals(m_PaymentController.Credentials.Email) || !edt_Password.Text.Equals(m_PaymentController.Credentials.Password))
                 m_PaymentController.Credentials = new Credentials()
                 {
                     Email = edt_Login.Text,
@@ -110,7 +112,7 @@ namespace Example
             try
             {
                 if (!this.Disposing && !this.IsDisposed)
-                    this.Invoke((MethodInvoker)delegate
+                    this.BeginInvoke((MethodInvoker)delegate
                         {
                             try
                             {
@@ -144,11 +146,21 @@ namespace Example
             }
         }
 
+        private void InitDivider()
+        {
+            Graphics g = edt_Log.CreateGraphics();
+            int charWidth = (int) Math.Round(g.MeasureString("==", edt_Log.Font).Width - g.MeasureString("=", edt_Log.Font).Width);
+            int maxChars = (int)((float)(edt_Log.Width - SystemInformation.VerticalScrollBarWidth) / charWidth) - 1;
+            DIVIDER = new string('=', Math.Max(0, maxChars));
+        }
+
         private void startPayment()
         {
             checkCredentials();
 
             PaymentController.Instance.SinglestepEMV = cb_SinglestepEMV.Checked;
+            PaymentController.Instance.ConnectionLostTimeout = new TimeSpan(0, 0, (int)edt_ConnectionTimeout.Value);
+            PaymentController.Instance.ConnectionLostRestries = (int) edt_ConnectionRetries.Value;
             bool hasProduct = cb_Product.Checked;
             bool isRegular = cb_Regular.Checked;
             PaymentContext paymentContext = isRegular ? new RegularPaymentContext() : new PaymentContext();
@@ -158,6 +170,7 @@ namespace Example
             paymentContext.ReceiptEmail = edt_Email.Text;
             paymentContext.ReceiptPhone = edt_Phone.Text;
             paymentContext.ExtID = ExtID;
+            paymentContext.Deferred = cbDeferred.Checked;
 
 
             if (cb_Purchases.Checked)
@@ -203,35 +216,44 @@ namespace Example
             }
             else if (rb_Credit.Checked)
                 paymentContext.Method = PaymentMethod.Credit;
+            else if (rb_Prepaid.Checked)
+                paymentContext.Method = PaymentMethod.Prepaid;
             else if (rb_Link.Checked)
                 paymentContext.Method = PaymentMethod.Other;
             else if (rb_Outer.Checked)
                 paymentContext.Method = PaymentMethod.OuterCard;
             else if (rb_LinkedCard.Checked)
             {
-
-                APIReadLinkedCardsResult result = PaymentController.Instance.GetLinkedCards();
-                if (result.ErrorCode == 0)
-                    m_LinkedCards = result.LinkedCards;
-                paymentContext.Method = PaymentMethod.LinkedCard;
-                if (m_LinkedCards != null && m_LinkedCards.Count > 0)
+                try
                 {
-                    int selectedCardIndex = Utils.ShowDialog(m_LinkedCards.ConvertAll(c => c.Alias), "Select card");
-                    if (selectedCardIndex >= 0)
+                    APIReadLinkedCardsResult result = PaymentController.Instance.GetLinkedCards();
+                    if (result.ErrorCode == 0)
+                        m_LinkedCards = result.LinkedCards;
+                    paymentContext.Method = PaymentMethod.LinkedCard;
+                    if (m_LinkedCards != null && m_LinkedCards.Count > 0)
                     {
-                        var selectedCard = m_LinkedCards[selectedCardIndex];
-                        log("CARD " + selectedCard.ID + " ALIAS " + selectedCard.Alias);
-                        paymentContext.LinkedCardID = selectedCard.ID;
+                        int selectedCardIndex = Utils.ShowDialog(m_LinkedCards.ConvertAll(c => c.Alias), "Select card");
+                        if (selectedCardIndex >= 0)
+                        {
+                            var selectedCard = m_LinkedCards[selectedCardIndex];
+                            log("CARD " + selectedCard.ID + " ALIAS " + selectedCard.Alias);
+                            paymentContext.LinkedCardID = selectedCard.ID;
+                        }
+                        else
+                        {
+                            log("ERROR : CANCEL SELECT CARD");
+                            return;
+                        }
                     }
                     else
                     {
-                        log("ERROR : CANCEL SELECT CARD");
+                        log("ERROR : NO LINKED CARDS");
                         return;
                     }
                 }
-                else
+                catch (Exception e)
                 {
-                    log("ERROR : NO LINKED CARDS");
+                    log("ERROR : CANT READ LINKED CARDS: " + e.Message);
                     return;
                 }
             }
@@ -361,7 +383,10 @@ namespace Example
                                 paymentContext.AcquirerCode = acquirers.First().Key;
                             else {
                                 int index = Utils.ShowDialog(acquirers.Values.ToList(), "Select acquirer");
-                                paymentContext.AcquirerCode = acquirers.Keys.ToList()[Math.Max(0, index)];
+                                if (index != -1)
+                                    paymentContext.AcquirerCode = acquirers.Keys.ToList()[Math.Max(0, index)];
+                                else
+                                    return;
                             }
                         }
                     }
@@ -369,9 +394,9 @@ namespace Example
 
             try
             {
-                m_PaymentController.StartPayment(paymentContext);
                 log(DIVIDER);
                 log(string.Format("STARTING NEW PAYMENT : {0}{1}", Environment.NewLine, JsonConvert.SerializeObject(paymentContext, Formatting.Indented)));
+                m_PaymentController.StartPayment(paymentContext);
             }
             catch (InvalidOperationException e)
             {
@@ -423,9 +448,9 @@ namespace Example
                     }
                 }
 
-                m_PaymentController.StartReverse(reverseContext);
                 log(DIVIDER);
                 log(string.Format("{0} PAYMENT : {1}{2}", reverseContext.Mode == ReverseMode.Cancel ? "CANCEL" : "RETURN", Environment.NewLine, reverseContext.TransactionID));
+                m_PaymentController.StartReverse(reverseContext);
             }
             catch (InvalidOperationException e)
             {
@@ -446,8 +471,6 @@ namespace Example
                 m_AuthResult = result;
                 if (result != null && result.ErrorCode == 0)
                 {
-                    getLinkedCards();
-
                     dlgProduct.Products = m_AuthResult.Products;
                     cb_Product.Invoke((MethodInvoker)delegate
                     {
@@ -456,6 +479,7 @@ namespace Example
                     });
 
                     log(JsonConvert.SerializeObject(result.Account, Formatting.Indented));
+                    getLinkedCards();
                 }
                 else
                 {
@@ -490,9 +514,14 @@ namespace Example
             }
             try
             {
-                m_PaymentController.AddLinkedCard(currency, acquirerCode);
                 log(DIVIDER);
                 log("STARTING LINKED CARD ATTACH");
+                m_PaymentController.AddLinkedCard(new AttachCardContext()
+                {
+                    Currency = currency,
+                    AcquirerCode = acquirerCode,
+                    Deferred = cbDeferred.Checked
+                });
             }
             catch (InvalidOperationException e)
             {
@@ -607,9 +636,12 @@ namespace Example
         }
 
         #region PaymentController events    
-        private void onReaderEvent(ReaderEvent readerEvent)
+        private void onReaderEvent(ReaderEvent readerEvent, Dictionary<String, String> info)
         {
             log(string.Format("EVENT : {0}", readerEvent.ToString()));
+            if (info != null)
+                foreach (String key in info.Keys)
+                   log(String.Format("{0} : {1}", key, info[key]));
         }
 
         private void onPaymentError(PaymentError error, string errorMsg)
@@ -692,7 +724,7 @@ namespace Example
                     slipBuilder.AppendFormat("Терминал: {0}\n", resultTran.TerminalName);
                     slipBuilder.AppendFormat("Чек: {0}\n", resultTran.Invoice);
                     slipBuilder.AppendFormat("Код подтверждения: {0}\n", resultTran.AcquirerApprovalCode);
-                    slipBuilder.AppendFormat("Карта: {0} {1}\n", resultTran.Card.IIN, resultTran.Card.PANMasked.Replace("*", " **** "));
+                    slipBuilder.AppendFormat("Карта: {0} {1}\n", resultTran.Card?.IIN ?? "", resultTran.Card?.PANMasked?.Replace("*", " **** ") ?? "");
 
                     if (resultTran.EMVData != null)
                         foreach (String key in resultTran.EMVData.Keys)
@@ -722,6 +754,31 @@ namespace Example
                     log("ATTACH FINISHED :" + Environment.NewLine + JsonConvert.SerializeObject(result, Formatting.Indented));
                     getLinkedCards();
                 }
+                else if (result.DeferredData != null)
+                {
+                    log("panHash: " + result.CardHash);
+                    log("deferredData: " + result.DeferredData);
+                    Task.Factory.StartNew(() =>
+                    {
+                        try
+                        {
+                            log("SUBMIT DEFERRED");
+                            var submitDeferredResult = m_PaymentController.SubmitDeferred(result.DeferredData);
+                            if (submitDeferredResult.TransactionItem != null || submitDeferredResult.AttachedCard != null)
+                                onPaymentFinished(submitDeferredResult);
+                            else
+                                log("PAYMENT FINISHED(DEFERRED IN PROCESS)");
+                        }
+                        catch (ProcessingException e)
+                        {
+                            log(string.Format("ERROR : {0} ({1})", e.Message, e.ErrorCode));
+                        }
+                        catch (InvalidOperationException e)
+                        {
+                            log(string.Format("ERROR : {0}", e.Message));
+                        }
+                    });
+                }
                 else
                 {                
                     log("PAYMENT FINISHED");
@@ -736,7 +793,7 @@ namespace Example
 
         private void onReverseEvent(ReverseEvent reverseEvent, string message)
         {
-            log(string.Format("REVERSE : {0}", message));
+            log(string.Format("REVERSE : {0}", reverseEvent.ToString()));
         }    
         #endregion
 
@@ -745,20 +802,11 @@ namespace Example
         {
             try
             {
-                ReaderType readerType =  ReaderType.P17;
-                if (rb_Wisepad.Checked) readerType = ReaderType.P15;
-                else if (rb_Wisepad2.Checked) readerType = ReaderType.P16;
-                else if (rb_Qpos_mini.Checked) readerType = ReaderType.P17;
-                
-                PortInfo selectedPort = null;
-                if (!cb_Usb.Checked && portInfos != null && portInfos.Count > 0)
-                    selectedPort = portInfos[cmb_Paired.SelectedIndex];
-
                 //P17 only
                 Dictionary<String, object> settings = new Dictionary<string, object>();
                 settings["NOTUP"] = cb_notup.Checked;
                 
-                m_PaymentController.SetReaderType(readerType, (cb_Usb.Checked || selectedPort == null) ? null : selectedPort.portName, settings);
+                m_PaymentController.SetReaderType(ReaderType.P17, settings);
             }
             catch (InvalidOperationException ex)
             {
@@ -799,21 +847,7 @@ namespace Example
                 dlgRegular.ShowDialog();
         }
 
-        private void cb_Usb_CheckedChanged(object sender, EventArgs e)
-        {
-            if (cb_Usb.Checked)
-            {
-                lbl_PairedDevices.Enabled = false;
-                cmb_Paired.Enabled = false;
-            }
-            else
-            {
-                lbl_PairedDevices.Enabled = true;
-                if (portInfos != null && portInfos.Count > 0)
-                    cmb_Paired.Enabled = true;
-            }
-        }
-
+     
         private void btn_Adjust_Click(object sender, EventArgs e)
         {
             if (!dlgAdjust.Visible)
@@ -889,80 +923,12 @@ namespace Example
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            new Thread(() =>
-            {
-                try
-                {
-                    cmb_Paired.Invoke((MethodInvoker)delegate
-                    {
-                        cmb_Paired.Items.Clear();
-                        cmb_Paired.Enabled = false;
-                        cmb_Paired.Text = "Loading paired devices...";
-                    });
+            InitDivider();
+        }
 
-                    ManagementObjectSearcher ManObjSearch = new ManagementObjectSearcher("Select * from Win32_SerialPort where PNPDeviceID like 'BTHENUM%'");
-                    ManagementObjectCollection ManObjReturn = ManObjSearch.Get();
-
-                    foreach (ManagementObject ManObj in ManObjReturn)
-                    {
-                        string portName = ManObj["DeviceID"].ToString();
-                        string pnpDeviceID = ManObj["PNPDeviceID"].ToString();
-
-
-                        //Console.WriteLine(portName + " " + pnpDeviceID);
-
-                        string macAddress;
-
-                        try
-                        {
-                            int startIndex = pnpDeviceID.LastIndexOf('&') + 1;
-                            int endIndex = pnpDeviceID.LastIndexOf('_');
-                            macAddress = pnpDeviceID.Substring(startIndex, endIndex - startIndex);
-                        }
-                        catch
-                        {
-                            continue;
-                        }
-
-                        if (macAddress == "000000000000")
-                        {
-                            continue;
-                        }
-
-                        BluetoothAddress bluetoothAddress = BluetoothAddress.CreateFromBigEndian(hexToByteArray(macAddress));
-                        BluetoothDeviceInfo bluetoothDeviceInfo = new BluetoothDeviceInfo(bluetoothAddress);
-                        string deviceName = bluetoothDeviceInfo.DeviceName;
-
-                        portInfos.Add(new PortInfo(portName, deviceName));
-                        cmb_Paired.Invoke((MethodInvoker)delegate { cmb_Paired.Items.Add(deviceName); });
-                    }
-
-                    if (cmb_Paired.Items.Count == 0)
-                    {
-                        string[] ports = SerialPort.GetPortNames();
-                        for (int i = 0; i < ports.Length; ++i)
-                        {
-                            portInfos.Add(new PortInfo(ports[i], ""));
-                            cmb_Paired.Invoke((MethodInvoker)delegate { cmb_Paired.Items.Add(ports[i]); });
-                        }
-                    }
-
-                    cmb_Paired.Invoke((MethodInvoker)delegate
-                    {
-                        if (cmb_Paired.Items.Count == 0)
-                        {
-                            cmb_Paired.Text = "Device not found";
-                        }
-                        else
-                        {
-                            cmb_Paired.Text = "";
-                            if (!cb_Usb.Checked)
-                                cmb_Paired.Enabled = true;
-                        }
-                    });
-                }
-                catch { }
-            }).Start();
+        private void MainForm_SizeChanged(object sender, EventArgs e)
+        {
+            InitDivider();
         }
 
         private void DlgProduct_FormClosing(object sender, FormClosingEventArgs e)

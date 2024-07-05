@@ -70,7 +70,7 @@ namespace Example
                 }
                 else
                 {
-                    Log(string.Format("FISCALIZEL ERROR : {0}({1})", (result == null ? "null" : result.ErrorMessage), (result == null ? "null" : result.ErrorCode.ToString())));
+                    Log(string.Format("FISCALIZE ERROR : {0}({1})", (result == null ? "null" : result.ErrorMessage), (result == null ? "null" : result.ErrorCode.ToString())));
                 }
                 Log(MainForm.DIVIDER);
             });

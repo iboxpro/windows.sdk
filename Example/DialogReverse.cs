@@ -27,7 +27,7 @@ namespace Example
             ReverseMode mode = rb_Cancel.Checked ? ReverseMode.Cancel : ReverseMode.Return;
             decimal? amountToReverse = string.IsNullOrEmpty(edt_ReverseAmount.Text) ? null : (decimal?)decimal.Parse(edt_ReverseAmount.Text);
 
-            reverseContext.TransactionID = trID;
+            reverseContext.TransactionID = trID.Trim();
             reverseContext.Mode = mode;
             reverseContext.AmountToReverse = amountToReverse;
         }
