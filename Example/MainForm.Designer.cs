@@ -82,6 +82,8 @@
             this.edt_ConnectionTimeout = new System.Windows.Forms.NumericUpDown();
             this.edt_ConnectionRetries = new System.Windows.Forms.NumericUpDown();
             this.lbl_ConnectionRetries = new System.Windows.Forms.Label();
+            this.lbl_Reader = new System.Windows.Forms.Label();
+            this.cb_Reader = new System.Windows.Forms.ComboBox();
             this.gb_Currency.SuspendLayout();
             this.gb_Input.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.edt_ConnectionTimeout)).BeginInit();
@@ -93,7 +95,7 @@
             this.btn_Enable.Location = new System.Drawing.Point(272, 48);
             this.btn_Enable.Name = "btn_Enable";
             this.btn_Enable.Size = new System.Drawing.Size(258, 30);
-            this.btn_Enable.TabIndex = 26;
+            this.btn_Enable.TabIndex = 32;
             this.btn_Enable.Text = "Enable";
             this.btn_Enable.UseVisualStyleBackColor = true;
             this.btn_Enable.Click += new System.EventHandler(this.btn_Start_Click);
@@ -103,7 +105,7 @@
             this.btn_Disable.Location = new System.Drawing.Point(272, 83);
             this.btn_Disable.Name = "btn_Disable";
             this.btn_Disable.Size = new System.Drawing.Size(258, 30);
-            this.btn_Disable.TabIndex = 27;
+            this.btn_Disable.TabIndex = 33;
             this.btn_Disable.Text = "Disable";
             this.btn_Disable.UseVisualStyleBackColor = true;
             this.btn_Disable.Click += new System.EventHandler(this.btn_Stop_Click);
@@ -114,14 +116,14 @@
             this.btn_StartPayment.Location = new System.Drawing.Point(272, 118);
             this.btn_StartPayment.Name = "btn_StartPayment";
             this.btn_StartPayment.Size = new System.Drawing.Size(258, 30);
-            this.btn_StartPayment.TabIndex = 28;
+            this.btn_StartPayment.TabIndex = 34;
             this.btn_StartPayment.Text = "Start payment";
             this.btn_StartPayment.UseVisualStyleBackColor = true;
             this.btn_StartPayment.Click += new System.EventHandler(this.btn_StartPayment_Click);
             // 
             // edt_Description
             // 
-            this.edt_Description.Location = new System.Drawing.Point(139, 125);
+            this.edt_Description.Location = new System.Drawing.Point(139, 124);
             this.edt_Description.Name = "edt_Description";
             this.edt_Description.Size = new System.Drawing.Size(130, 20);
             this.edt_Description.TabIndex = 8;
@@ -139,7 +141,7 @@
             // lbl_Description
             // 
             this.lbl_Description.AutoSize = true;
-            this.lbl_Description.Location = new System.Drawing.Point(8, 128);
+            this.lbl_Description.Location = new System.Drawing.Point(8, 127);
             this.lbl_Description.Name = "lbl_Description";
             this.lbl_Description.Size = new System.Drawing.Size(63, 13);
             this.lbl_Description.TabIndex = 7;
@@ -159,7 +161,7 @@
             this.btn_ClearLog.Location = new System.Drawing.Point(272, 503);
             this.btn_ClearLog.Name = "btn_ClearLog";
             this.btn_ClearLog.Size = new System.Drawing.Size(260, 30);
-            this.btn_ClearLog.TabIndex = 39;
+            this.btn_ClearLog.TabIndex = 45;
             this.btn_ClearLog.Text = "Clear log";
             this.btn_ClearLog.UseVisualStyleBackColor = true;
             this.btn_ClearLog.Click += new System.EventHandler(this.btn_ClearLog_Click);
@@ -167,10 +169,10 @@
             // cb_Regular
             // 
             this.cb_Regular.AutoSize = true;
-            this.cb_Regular.Location = new System.Drawing.Point(11, 273);
+            this.cb_Regular.Location = new System.Drawing.Point(11, 293);
             this.cb_Regular.Name = "cb_Regular";
             this.cb_Regular.Size = new System.Drawing.Size(106, 17);
-            this.cb_Regular.TabIndex = 17;
+            this.cb_Regular.TabIndex = 19;
             this.cb_Regular.Text = "Regular payment";
             this.cb_Regular.UseVisualStyleBackColor = true;
             this.cb_Regular.CheckedChanged += new System.EventHandler(this.cb_Regular_CheckedChanged);
@@ -180,7 +182,7 @@
             this.btn_Adjust.Location = new System.Drawing.Point(272, 293);
             this.btn_Adjust.Name = "btn_Adjust";
             this.btn_Adjust.Size = new System.Drawing.Size(258, 30);
-            this.btn_Adjust.TabIndex = 33;
+            this.btn_Adjust.TabIndex = 39;
             this.btn_Adjust.Text = "Adjust payment";
             this.btn_Adjust.UseVisualStyleBackColor = true;
             this.btn_Adjust.Click += new System.EventHandler(this.btn_Adjust_Click);
@@ -222,7 +224,7 @@
             this.btn_History.Location = new System.Drawing.Point(272, 398);
             this.btn_History.Name = "btn_History";
             this.btn_History.Size = new System.Drawing.Size(258, 30);
-            this.btn_History.TabIndex = 36;
+            this.btn_History.TabIndex = 42;
             this.btn_History.Text = "Get history";
             this.btn_History.UseVisualStyleBackColor = true;
             this.btn_History.Click += new System.EventHandler(this.btn_History_Click);
@@ -230,10 +232,10 @@
             // cb_Product
             // 
             this.cb_Product.AutoSize = true;
-            this.cb_Product.Location = new System.Drawing.Point(11, 294);
+            this.cb_Product.Location = new System.Drawing.Point(11, 314);
             this.cb_Product.Name = "cb_Product";
             this.cb_Product.Size = new System.Drawing.Size(127, 17);
-            this.cb_Product.TabIndex = 18;
+            this.cb_Product.TabIndex = 20;
             this.cb_Product.Text = "Add payment product";
             this.cb_Product.UseVisualStyleBackColor = true;
             this.cb_Product.CheckedChanged += new System.EventHandler(this.cb_Product_CheckedChanged);
@@ -241,7 +243,7 @@
             // lbl_ImageFilePath
             // 
             this.lbl_ImageFilePath.AutoSize = true;
-            this.lbl_ImageFilePath.Location = new System.Drawing.Point(8, 154);
+            this.lbl_ImageFilePath.Location = new System.Drawing.Point(8, 152);
             this.lbl_ImageFilePath.Name = "lbl_ImageFilePath";
             this.lbl_ImageFilePath.Size = new System.Drawing.Size(79, 13);
             this.lbl_ImageFilePath.TabIndex = 9;
@@ -249,7 +251,7 @@
             // 
             // edt_ImageFilePath
             // 
-            this.edt_ImageFilePath.Location = new System.Drawing.Point(139, 151);
+            this.edt_ImageFilePath.Location = new System.Drawing.Point(139, 149);
             this.edt_ImageFilePath.Name = "edt_ImageFilePath";
             this.edt_ImageFilePath.Size = new System.Drawing.Size(130, 20);
             this.edt_ImageFilePath.TabIndex = 10;
@@ -259,7 +261,7 @@
             this.btn_Reverse.Location = new System.Drawing.Point(272, 153);
             this.btn_Reverse.Name = "btn_Reverse";
             this.btn_Reverse.Size = new System.Drawing.Size(258, 30);
-            this.btn_Reverse.TabIndex = 29;
+            this.btn_Reverse.TabIndex = 35;
             this.btn_Reverse.Text = "Reverse Payment";
             this.btn_Reverse.UseVisualStyleBackColor = true;
             this.btn_Reverse.Click += new System.EventHandler(this.btn_Reverse_Click);
@@ -268,10 +270,10 @@
             // 
             this.gb_Currency.Controls.Add(this.rb_VND);
             this.gb_Currency.Controls.Add(this.rb_RUB);
-            this.gb_Currency.Location = new System.Drawing.Point(147, 411);
+            this.gb_Currency.Location = new System.Drawing.Point(147, 431);
             this.gb_Currency.Name = "gb_Currency";
             this.gb_Currency.Size = new System.Drawing.Size(122, 66);
-            this.gb_Currency.TabIndex = 24;
+            this.gb_Currency.TabIndex = 30;
             this.gb_Currency.TabStop = false;
             this.gb_Currency.Text = "Currency";
             // 
@@ -303,7 +305,7 @@
             this.btn_Cancel.Location = new System.Drawing.Point(272, 188);
             this.btn_Cancel.Name = "btn_Cancel";
             this.btn_Cancel.Size = new System.Drawing.Size(258, 30);
-            this.btn_Cancel.TabIndex = 30;
+            this.btn_Cancel.TabIndex = 36;
             this.btn_Cancel.Text = "Cancel";
             this.btn_Cancel.UseVisualStyleBackColor = true;
             this.btn_Cancel.Click += new System.EventHandler(this.btn_Cancel_Click);
@@ -314,10 +316,10 @@
             this.cb_SinglestepEMV.Checked = true;
             this.cb_SinglestepEMV.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cb_SinglestepEMV.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.cb_SinglestepEMV.Location = new System.Drawing.Point(11, 231);
+            this.cb_SinglestepEMV.Location = new System.Drawing.Point(11, 251);
             this.cb_SinglestepEMV.Name = "cb_SinglestepEMV";
             this.cb_SinglestepEMV.Size = new System.Drawing.Size(101, 17);
-            this.cb_SinglestepEMV.TabIndex = 15;
+            this.cb_SinglestepEMV.TabIndex = 17;
             this.cb_SinglestepEMV.Text = "Singlestep EMV";
             this.cb_SinglestepEMV.UseVisualStyleBackColor = true;
             // 
@@ -334,7 +336,7 @@
             this.edt_Log.ReadOnly = true;
             this.edt_Log.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
             this.edt_Log.Size = new System.Drawing.Size(465, 520);
-            this.edt_Log.TabIndex = 40;
+            this.edt_Log.TabIndex = 46;
             this.edt_Log.Text = "";
             // 
             // btn_CheckConnection
@@ -342,7 +344,7 @@
             this.btn_CheckConnection.Location = new System.Drawing.Point(272, 13);
             this.btn_CheckConnection.Name = "btn_CheckConnection";
             this.btn_CheckConnection.Size = new System.Drawing.Size(258, 30);
-            this.btn_CheckConnection.TabIndex = 25;
+            this.btn_CheckConnection.TabIndex = 31;
             this.btn_CheckConnection.Text = "Check connection";
             this.btn_CheckConnection.UseVisualStyleBackColor = true;
             this.btn_CheckConnection.Click += new System.EventHandler(this.btn_CheckConnection_Click);
@@ -366,10 +368,10 @@
             this.gb_Input.Controls.Add(this.rb_Cash);
             this.gb_Input.Controls.Add(this.rb_Credit);
             this.gb_Input.Controls.Add(this.rb_Card);
-            this.gb_Input.Location = new System.Drawing.Point(147, 231);
+            this.gb_Input.Location = new System.Drawing.Point(147, 251);
             this.gb_Input.Name = "gb_Input";
             this.gb_Input.Size = new System.Drawing.Size(122, 174);
-            this.gb_Input.TabIndex = 23;
+            this.gb_Input.TabIndex = 29;
             this.gb_Input.TabStop = false;
             this.gb_Input.Text = "Payment method";
             // 
@@ -379,7 +381,7 @@
             this.rb_Prepaid.Location = new System.Drawing.Point(9, 84);
             this.rb_Prepaid.Name = "rb_Prepaid";
             this.rb_Prepaid.Size = new System.Drawing.Size(61, 17);
-            this.rb_Prepaid.TabIndex = 6;
+            this.rb_Prepaid.TabIndex = 3;
             this.rb_Prepaid.Text = "Prepaid";
             this.rb_Prepaid.UseVisualStyleBackColor = true;
             // 
@@ -409,7 +411,7 @@
             this.rb_Link.Location = new System.Drawing.Point(9, 151);
             this.rb_Link.Name = "rb_Link";
             this.rb_Link.Size = new System.Drawing.Size(56, 17);
-            this.rb_Link.TabIndex = 3;
+            this.rb_Link.TabIndex = 6;
             this.rb_Link.Text = "By link";
             this.rb_Link.UseVisualStyleBackColor = true;
             // 
@@ -450,7 +452,7 @@
             this.btn_Attach.Location = new System.Drawing.Point(272, 223);
             this.btn_Attach.Name = "btn_Attach";
             this.btn_Attach.Size = new System.Drawing.Size(258, 30);
-            this.btn_Attach.TabIndex = 31;
+            this.btn_Attach.TabIndex = 37;
             this.btn_Attach.Text = "Attach card";
             this.btn_Attach.UseVisualStyleBackColor = true;
             this.btn_Attach.Click += new System.EventHandler(this.btn_Attach_Click);
@@ -460,7 +462,7 @@
             this.btn_Remove.Location = new System.Drawing.Point(272, 258);
             this.btn_Remove.Name = "btn_Remove";
             this.btn_Remove.Size = new System.Drawing.Size(258, 30);
-            this.btn_Remove.TabIndex = 32;
+            this.btn_Remove.TabIndex = 38;
             this.btn_Remove.Text = "Remove card";
             this.btn_Remove.UseVisualStyleBackColor = true;
             this.btn_Remove.Click += new System.EventHandler(this.btn_Remove_Click);
@@ -468,20 +470,20 @@
             // cb_TestServerFisc
             // 
             this.cb_TestServerFisc.AutoSize = true;
-            this.cb_TestServerFisc.Location = new System.Drawing.Point(11, 357);
+            this.cb_TestServerFisc.Location = new System.Drawing.Point(11, 377);
             this.cb_TestServerFisc.Name = "cb_TestServerFisc";
             this.cb_TestServerFisc.Size = new System.Drawing.Size(136, 17);
-            this.cb_TestServerFisc.TabIndex = 21;
+            this.cb_TestServerFisc.TabIndex = 23;
             this.cb_TestServerFisc.Text = "Test server fiscalization";
             this.cb_TestServerFisc.UseVisualStyleBackColor = true;
             // 
             // cb_Purchases
             // 
             this.cb_Purchases.AutoSize = true;
-            this.cb_Purchases.Location = new System.Drawing.Point(11, 315);
+            this.cb_Purchases.Location = new System.Drawing.Point(11, 335);
             this.cb_Purchases.Name = "cb_Purchases";
             this.cb_Purchases.Size = new System.Drawing.Size(97, 17);
-            this.cb_Purchases.TabIndex = 19;
+            this.cb_Purchases.TabIndex = 21;
             this.cb_Purchases.Text = "Add purchases";
             this.cb_Purchases.UseVisualStyleBackColor = true;
             this.cb_Purchases.CheckedChanged += new System.EventHandler(this.cb_Purchases_CheckedChanged);
@@ -489,16 +491,16 @@
             // cb_notup
             // 
             this.cb_notup.AutoSize = true;
-            this.cb_notup.Location = new System.Drawing.Point(11, 252);
+            this.cb_notup.Location = new System.Drawing.Point(11, 272);
             this.cb_notup.Name = "cb_notup";
             this.cb_notup.Size = new System.Drawing.Size(94, 17);
-            this.cb_notup.TabIndex = 16;
+            this.cb_notup.TabIndex = 18;
             this.cb_notup.Text = "P17 Auto NFC";
             this.cb_notup.UseVisualStyleBackColor = true;
             // 
             // edt_Phone
             // 
-            this.edt_Phone.Location = new System.Drawing.Point(139, 202);
+            this.edt_Phone.Location = new System.Drawing.Point(139, 199);
             this.edt_Phone.Mask = "+7(000)000-00-00";
             this.edt_Phone.Name = "edt_Phone";
             this.edt_Phone.Size = new System.Drawing.Size(130, 20);
@@ -507,7 +509,7 @@
             // 
             // edt_Email
             // 
-            this.edt_Email.Location = new System.Drawing.Point(139, 176);
+            this.edt_Email.Location = new System.Drawing.Point(139, 174);
             this.edt_Email.Name = "edt_Email";
             this.edt_Email.Size = new System.Drawing.Size(130, 20);
             this.edt_Email.TabIndex = 12;
@@ -515,7 +517,7 @@
             // lbl_Phone
             // 
             this.lbl_Phone.AutoSize = true;
-            this.lbl_Phone.Location = new System.Drawing.Point(8, 205);
+            this.lbl_Phone.Location = new System.Drawing.Point(8, 202);
             this.lbl_Phone.Name = "lbl_Phone";
             this.lbl_Phone.Size = new System.Drawing.Size(41, 13);
             this.lbl_Phone.TabIndex = 13;
@@ -524,7 +526,7 @@
             // lbl_Email
             // 
             this.lbl_Email.AutoSize = true;
-            this.lbl_Email.Location = new System.Drawing.Point(8, 179);
+            this.lbl_Email.Location = new System.Drawing.Point(8, 177);
             this.lbl_Email.Name = "lbl_Email";
             this.lbl_Email.Size = new System.Drawing.Size(35, 13);
             this.lbl_Email.TabIndex = 11;
@@ -535,7 +537,7 @@
             this.btn_SubmitFiscal.Location = new System.Drawing.Point(272, 328);
             this.btn_SubmitFiscal.Name = "btn_SubmitFiscal";
             this.btn_SubmitFiscal.Size = new System.Drawing.Size(258, 30);
-            this.btn_SubmitFiscal.TabIndex = 34;
+            this.btn_SubmitFiscal.TabIndex = 40;
             this.btn_SubmitFiscal.Text = "Submit fiscal data";
             this.btn_SubmitFiscal.UseVisualStyleBackColor = true;
             this.btn_SubmitFiscal.Click += new System.EventHandler(this.btn_SubmitFiscal_Click);
@@ -545,7 +547,7 @@
             this.btn_Fiscalize.Location = new System.Drawing.Point(272, 363);
             this.btn_Fiscalize.Name = "btn_Fiscalize";
             this.btn_Fiscalize.Size = new System.Drawing.Size(258, 30);
-            this.btn_Fiscalize.TabIndex = 35;
+            this.btn_Fiscalize.TabIndex = 41;
             this.btn_Fiscalize.Text = "Fiscalize";
             this.btn_Fiscalize.UseVisualStyleBackColor = true;
             this.btn_Fiscalize.Click += new System.EventHandler(this.btn_Fiscalize_Click);
@@ -556,7 +558,7 @@
             this.btnDisableReaderSound.Margin = new System.Windows.Forms.Padding(2);
             this.btnDisableReaderSound.Name = "btnDisableReaderSound";
             this.btnDisableReaderSound.Size = new System.Drawing.Size(259, 30);
-            this.btnDisableReaderSound.TabIndex = 38;
+            this.btnDisableReaderSound.TabIndex = 44;
             this.btnDisableReaderSound.Text = "Disable sound";
             this.btnDisableReaderSound.UseVisualStyleBackColor = true;
             this.btnDisableReaderSound.Click += new System.EventHandler(this.btnDisableReaderSound_Click);
@@ -567,7 +569,7 @@
             this.btnEnableReaderSound.Margin = new System.Windows.Forms.Padding(2);
             this.btnEnableReaderSound.Name = "btnEnableReaderSound";
             this.btnEnableReaderSound.Size = new System.Drawing.Size(258, 30);
-            this.btnEnableReaderSound.TabIndex = 37;
+            this.btnEnableReaderSound.TabIndex = 43;
             this.btnEnableReaderSound.Text = "Enable sound";
             this.btnEnableReaderSound.UseVisualStyleBackColor = true;
             this.btnEnableReaderSound.Click += new System.EventHandler(this.btnEnableReaderSound_Click);
@@ -575,10 +577,10 @@
             // cb_Tags
             // 
             this.cb_Tags.AutoSize = true;
-            this.cb_Tags.Location = new System.Drawing.Point(11, 336);
+            this.cb_Tags.Location = new System.Drawing.Point(11, 356);
             this.cb_Tags.Name = "cb_Tags";
             this.cb_Tags.Size = new System.Drawing.Size(105, 17);
-            this.cb_Tags.TabIndex = 20;
+            this.cb_Tags.TabIndex = 22;
             this.cb_Tags.Text = "Add invoice tags";
             this.cb_Tags.UseVisualStyleBackColor = true;
             this.cb_Tags.CheckedChanged += new System.EventHandler(this.cb_Tags_CheckedChanged);
@@ -586,50 +588,70 @@
             // cbDeferred
             // 
             this.cbDeferred.AutoSize = true;
-            this.cbDeferred.Location = new System.Drawing.Point(11, 378);
+            this.cbDeferred.Location = new System.Drawing.Point(11, 398);
             this.cbDeferred.Name = "cbDeferred";
             this.cbDeferred.Size = new System.Drawing.Size(91, 17);
-            this.cbDeferred.TabIndex = 22;
+            this.cbDeferred.TabIndex = 24;
             this.cbDeferred.Text = "Deferred auth";
             this.cbDeferred.UseVisualStyleBackColor = true;
             // 
             // lbl_Timeout
             // 
             this.lbl_Timeout.AutoSize = true;
-            this.lbl_Timeout.Location = new System.Drawing.Point(11, 399);
+            this.lbl_Timeout.Location = new System.Drawing.Point(11, 419);
             this.lbl_Timeout.Name = "lbl_Timeout";
             this.lbl_Timeout.Size = new System.Drawing.Size(109, 13);
-            this.lbl_Timeout.TabIndex = 41;
+            this.lbl_Timeout.TabIndex = 25;
             this.lbl_Timeout.Text = "Connection timeout, s";
             // 
             // edt_ConnectionTimeout
             // 
-            this.edt_ConnectionTimeout.Location = new System.Drawing.Point(11, 420);
+            this.edt_ConnectionTimeout.Location = new System.Drawing.Point(11, 440);
             this.edt_ConnectionTimeout.Name = "edt_ConnectionTimeout";
             this.edt_ConnectionTimeout.Size = new System.Drawing.Size(120, 20);
-            this.edt_ConnectionTimeout.TabIndex = 42;
+            this.edt_ConnectionTimeout.TabIndex = 26;
             // 
             // edt_ConnectionRetries
             // 
-            this.edt_ConnectionRetries.Location = new System.Drawing.Point(11, 464);
+            this.edt_ConnectionRetries.Location = new System.Drawing.Point(11, 484);
             this.edt_ConnectionRetries.Name = "edt_ConnectionRetries";
             this.edt_ConnectionRetries.Size = new System.Drawing.Size(120, 20);
-            this.edt_ConnectionRetries.TabIndex = 44;
+            this.edt_ConnectionRetries.TabIndex = 28;
             // 
             // lbl_ConnectionRetries
             // 
             this.lbl_ConnectionRetries.AutoSize = true;
-            this.lbl_ConnectionRetries.Location = new System.Drawing.Point(8, 443);
+            this.lbl_ConnectionRetries.Location = new System.Drawing.Point(8, 463);
             this.lbl_ConnectionRetries.Name = "lbl_ConnectionRetries";
             this.lbl_ConnectionRetries.Size = new System.Drawing.Size(92, 13);
-            this.lbl_ConnectionRetries.TabIndex = 43;
+            this.lbl_ConnectionRetries.TabIndex = 27;
             this.lbl_ConnectionRetries.Text = "Connection retries";
+            // 
+            // lbl_Reader
+            // 
+            this.lbl_Reader.AutoSize = true;
+            this.lbl_Reader.Location = new System.Drawing.Point(8, 227);
+            this.lbl_Reader.Name = "lbl_Reader";
+            this.lbl_Reader.Size = new System.Drawing.Size(42, 13);
+            this.lbl_Reader.TabIndex = 15;
+            this.lbl_Reader.Text = "Reader";
+            // 
+            // cb_Reader
+            // 
+            this.cb_Reader.FormattingEnabled = true;
+            this.cb_Reader.Location = new System.Drawing.Point(139, 224);
+            this.cb_Reader.Name = "cb_Reader";
+            this.cb_Reader.Size = new System.Drawing.Size(130, 21);
+            this.cb_Reader.TabIndex = 16;
+            this.cb_Reader.Text = "USB";
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1019, 541);
+            this.Controls.Add(this.cb_Reader);
+            this.Controls.Add(this.lbl_Reader);
             this.Controls.Add(this.edt_ConnectionRetries);
             this.Controls.Add(this.lbl_ConnectionRetries);
             this.Controls.Add(this.edt_ConnectionTimeout);
@@ -747,6 +769,8 @@
         private System.Windows.Forms.NumericUpDown edt_ConnectionTimeout;
         private System.Windows.Forms.NumericUpDown edt_ConnectionRetries;
         private System.Windows.Forms.Label lbl_ConnectionRetries;
+        private System.Windows.Forms.Label lbl_Reader;
+        private System.Windows.Forms.ComboBox cb_Reader;
     }
 }
 

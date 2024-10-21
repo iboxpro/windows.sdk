@@ -17,6 +17,7 @@ using System.Text;
 using InTheHand.Net;
 using InTheHand.Net.Sockets;
 using ibox.sdk.external.Exceptions;
+using ibox.sdk.external.controller;
 
 namespace Example
 {
@@ -41,6 +42,7 @@ namespace Example
         private APIAuthResult m_AuthResult;
         private List<LinkedCard> m_LinkedCards;
         private List<PortInfo> portInfos = new List<PortInfo>();
+        private DevicesMonitor devicesMonitor = new DevicesMonitor(System.Windows.Threading.Dispatcher.CurrentDispatcher);
 
         public MainForm()
         {
@@ -90,11 +92,42 @@ namespace Example
 
         private void initControls()
         {
-
             this.Text = "Example " + PaymentController.Instance.Version;
+
+            cb_Reader.DataSource = devicesMonitor.Devices;
+            devicesMonitor.Devices.CollectionChanged += Devices_CollectionChanged;
+
             edt_ConnectionTimeout.Value = (decimal) m_PaymentController.ConnectionLostTimeout.GetValueOrDefault().TotalSeconds;
             edt_ConnectionRetries.Value = m_PaymentController.ConnectionLostRestries;
+
             cb_Product.Enabled = false;
+
+            devicesMonitor.Start();
+        }
+
+        private void Devices_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            var selectedItem = cb_Reader.SelectedItem;
+
+            cb_Reader.DataSource = null;
+            cb_Reader.DataSource = devicesMonitor.Devices;
+            if (selectedItem != null)
+            {
+                cb_Reader.SelectedItem = devicesMonitor.Devices.FirstOrDefault(device => device.Equals(selectedItem));
+            }
+
+            if (cb_Reader.SelectedIndex < 0)
+            {
+                var usbDevice = devicesMonitor.Devices.FirstOrDefault(device => device.ConnectionMode == ConnectionMode.USB);
+                if (usbDevice != null)
+                {
+                    cb_Reader.SelectedItem = usbDevice;
+                } 
+                else
+                {
+                    cb_Reader.Text = "USB";
+                }
+            }
         }
 
         private void checkCredentials()
@@ -817,6 +850,18 @@ namespace Example
             m_PaymentController.Logger = delegate (string s_log) { log(s_log, Color.Blue); };
             //
 
+            var selectedDeviceIndex = cb_Reader.SelectedIndex;
+            var selectedDevice = selectedDeviceIndex >= 0
+                ? devicesMonitor.Devices[cb_Reader.SelectedIndex]
+                : null;
+            if (selectedDevice != null)
+            {
+                m_PaymentController.ReaderSettings = new ReaderSettings()
+                {
+                    ConnectionMode = selectedDevice.ConnectionMode,
+                    DeviceId = selectedDevice.ID
+                };
+            }
             m_PaymentController.Enable();
         }
 
